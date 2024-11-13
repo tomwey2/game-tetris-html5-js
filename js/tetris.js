@@ -12,14 +12,16 @@ const BOARD_TEXT_COLOR_TERIS = "#FF00FF";
 
 // Game states
 const GAME_INIT = "GAME_INIT";
+const GAME_READY = "GAME_IS_READY";
 const GAME_IS_RUNNING = "GAME_IS_RUNNING";
 const GAME_IS_OVER = "GAME_IS_OVER";
 const GAME_IS_PAUSED = "GAME_IS_PAUSED";
 
 // Dimensions
-const BOARD_ROWS = 20;
-const BOARD_COLUMNS = 10;
-const CELL_WIDTH = canvas.height / (BOARD_ROWS + 2);
+const BOARD_ROWS = 22;
+const BOARD_VISIBLE_ROWS = 20;
+const BOARD_COLS = 10;
+const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2);
 
 // Tetrominos
 const TETROMINO_I = 0;
@@ -34,11 +36,12 @@ const TETROMINOS = [
   {
     // TETROMINO_I
     coords: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [0, 3],
+      [BOARD_ROWS - 2, 0],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 2, 2],
+      [BOARD_ROWS - 2, 3],
     ],
+    // lightblue
     colorNormal: "#80C0FF",
     colorLight: "#C0E0FF",
     colorDark: "#3399FF",
@@ -46,11 +49,12 @@ const TETROMINOS = [
   {
     // TETROMINO_J
     coords: [
-      [0, 1],
-      [1, 1],
-      [2, 0],
-      [2, 1],
+      [BOARD_ROWS - 1, 0],
+      [BOARD_ROWS - 1, 1],
+      [BOARD_ROWS - 2, 2],
+      [BOARD_ROWS - 1, 2],
     ],
+    // darkblue
     colorNormal: "#004C99",
     colorLight: "#0066CC",
     colorDark: "#003366",
@@ -58,11 +62,12 @@ const TETROMINOS = [
   {
     // TETROMINO_L
     coords: [
-      [0, 0],
-      [1, 0],
-      [2, 0],
-      [2, 1],
+      [BOARD_ROWS - 2, 0],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 2, 2],
+      [BOARD_ROWS - 1, 2],
     ],
+    // orange
     colorNormal: "#FFC080",
     colorLight: "#FFE0C0",
     colorDark: "#FFA040",
@@ -70,35 +75,38 @@ const TETROMINOS = [
   {
     // TETROMINO_O
     coords: [
-      [0, 0],
-      [0, 1],
-      [1, 0],
-      [1, 1],
+      [BOARD_ROWS - 2, 0],
+      [BOARD_ROWS - 1, 0],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 1, 1],
     ],
-    colorNormal: "#FFFF80",
-    colorLight: "#FFFFC0",
-    colorDark: "#FFFF40",
+    // yellow
+    colorNormal: "#CCCC00",
+    colorLight: "#FFFF80",
+    colorDark: "#C0C000",
   },
   {
     // TETROMINO_S
     coords: [
-      [0, 1],
-      [0, 2],
-      [1, 0],
-      [1, 1],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 2, 2],
+      [BOARD_ROWS - 1, 0],
+      [BOARD_ROWS - 1, 1],
     ],
-    colorNormal: "#80FFC0",
-    colorLight: "#C0FFE0",
-    colorDark: "#40FFA0",
+    // green
+    colorNormal: "#80FF80",
+    colorLight: "#C0FFC0",
+    colorDark: "#00FF00",
   },
   {
     // TETROMINO_T
     coords: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [1, 1],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 1, 0],
+      [BOARD_ROWS - 1, 1],
+      [BOARD_ROWS - 1, 2],
     ],
+    // magenta
     colorNormal: "#C080FF",
     colorLight: "#E0C0FF",
     colorDark: "#A040FF",
@@ -106,11 +114,12 @@ const TETROMINOS = [
   {
     // TETROMINO_Z
     coords: [
-      [0, 0],
-      [0, 1],
-      [1, 1],
-      [1, 2],
+      [BOARD_ROWS - 2, 0],
+      [BOARD_ROWS - 2, 1],
+      [BOARD_ROWS - 1, 1],
+      [BOARD_ROWS - 1, 2],
     ],
+    // red
     colorNormal: "#990000",
     colorLight: "#CC0000",
     colorDark: "#660000",
@@ -141,6 +150,8 @@ function gameloop() {
   switch (gameState) {
     case GAME_INIT:
       gameInit();
+      break;
+    case GAME_READY:
       draw();
       break;
     case GAME_IS_RUNNING:
@@ -169,7 +180,7 @@ window.addEventListener("keydown", (event) => {
 
   setTimeout(() => {
     switch (gameState) {
-      case GAME_INIT:
+      case GAME_READY:
         if (keyPressedSpace) {
           setGameState(GAME_IS_RUNNING);
         }
@@ -208,14 +219,17 @@ window.addEventListener("keydown", (event) => {
 function gameInit() {
   board = Array(BOARD_ROWS)
     .fill()
-    .map(() => Array(BOARD_COLUMNS).fill(0));
+    .map(() => Array(BOARD_COLS).fill(0));
   currentTetromino = getRandomInt(TETROMINOS.length);
   currentTetrominoCoords = TETROMINOS[currentTetromino].coords.slice();
+  let shift = currentTetromino == TETROMINO_O ? 4 : 3;
+  currentTetrominoCoords.forEach((coord) => (coord[1] = coord[1] + shift));
   // Test
-  board[BOARD_ROWS - 2][5] = TETROMINO_S;
-  board[BOARD_ROWS - 2][6] = TETROMINO_S;
-  board[BOARD_ROWS - 1][4] = TETROMINO_S;
-  board[BOARD_ROWS - 1][5] = TETROMINO_S;
+  board[1][5] = TETROMINO_S;
+  board[1][6] = TETROMINO_S;
+  board[0][4] = TETROMINO_S;
+  board[0][5] = TETROMINO_S;
+  setGameState(GAME_READY);
 }
 
 function gameOver() {}
@@ -231,7 +245,7 @@ function draw() {
 }
 
 function drawInfoBoard() {
-  let gameBoardWidth = CELL_WIDTH * (BOARD_COLUMNS + 2);
+  let gameBoardWidth = CELL_WIDTH * (BOARD_COLS + 2);
   let infoBoardWidth = canvas.width - gameBoardWidth - CELL_WIDTH;
   let infoBoardCenter = gameBoardWidth + infoBoardWidth / 2;
 
@@ -297,32 +311,19 @@ function drawGameBoard() {
   drawFillRect(
     CELL_WIDTH,
     CELL_WIDTH,
-    CELL_WIDTH * BOARD_COLUMNS,
-    CELL_WIDTH * BOARD_ROWS,
+    CELL_WIDTH * BOARD_COLS,
+    CELL_WIDTH * BOARD_VISIBLE_ROWS,
     BOARD_BACKGROUND_COLOR_LIGHT,
   );
-  for (let row = 0; row < BOARD_ROWS; row++) {
-    for (let col = 0; col < BOARD_COLUMNS; col++) {
+  for (let row = 0; row < BOARD_VISIBLE_ROWS; row++) {
+    for (let col = 0; col < BOARD_COLS; col++) {
       if (board[row][col] == 0) {
-        drawFillRect(
-          CELL_WIDTH + col * CELL_WIDTH,
-          CELL_WIDTH + row * CELL_WIDTH,
-          CELL_WIDTH,
-          CELL_WIDTH,
-          "#CCCCCC",
-        );
-        drawFillRect(
-          CELL_WIDTH + col * CELL_WIDTH + 1,
-          CELL_WIDTH + row * CELL_WIDTH + 1,
-          CELL_WIDTH - 2,
-          CELL_WIDTH - 2,
-          BOARD_BACKGROUND_COLOR_LIGHT,
-        );
+        drawEmptyCell(row, col);
       } else {
         let tetromino = board[row][col];
         drawCell(
-          col,
           row,
+          col,
           TETROMINOS[tetromino].colorNormal,
           TETROMINOS[tetromino].colorLight,
           TETROMINOS[tetromino].colorDark,
@@ -334,10 +335,10 @@ function drawGameBoard() {
 
 function drawTetromino() {
   for (let index = 0; index < currentTetrominoCoords.length; index++) {
-    let [x, y] = currentTetrominoCoords[index];
+    let [row, col] = currentTetrominoCoords[index];
     drawCell(
-      x,
-      y,
+      row,
+      col,
       TETROMINOS[currentTetromino].colorNormal,
       TETROMINOS[currentTetromino].colorLight,
       TETROMINOS[currentTetromino].colorDark,
@@ -345,7 +346,29 @@ function drawTetromino() {
   }
 }
 
-function drawCell(x, y, colorNormal, colorLight, colorDark) {
+function drawEmptyCell(row, col) {
+  let x = transformColToX(col);
+  let y = transformRowToX(row);
+  drawFillRect(
+    CELL_WIDTH + x * CELL_WIDTH,
+    CELL_WIDTH + y * CELL_WIDTH,
+    CELL_WIDTH,
+    CELL_WIDTH,
+    "#CCCCCC",
+  );
+  drawFillRect(
+    CELL_WIDTH + x * CELL_WIDTH + 1,
+    CELL_WIDTH + y * CELL_WIDTH + 1,
+    CELL_WIDTH - 2,
+    CELL_WIDTH - 2,
+    BOARD_BACKGROUND_COLOR_LIGHT,
+  );
+}
+
+function drawCell(row, col, colorNormal, colorLight, colorDark) {
+  let x = transformColToX(col);
+  let y = transformRowToX(row);
+  if (y < 0) return;
   drawFillRect(
     CELL_WIDTH + x * CELL_WIDTH,
     CELL_WIDTH + y * CELL_WIDTH,
@@ -379,11 +402,11 @@ function drawCell(x, y, colorNormal, colorLight, colorDark) {
 function moveTetrominoLeft() {
   if (
     currentTetrominoCoords.every(
-      (coord) => coord[0] > 0 && board[coord[1]][coord[0] - 1] == 0,
+      (coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0,
     )
   ) {
     for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][0]--;
+      currentTetrominoCoords[index][1]--;
     }
   }
 }
@@ -392,19 +415,11 @@ function moveTetrominoRight() {
   if (
     currentTetrominoCoords.every(
       (coord) =>
-        coord[0] < BOARD_COLUMNS - 1 && board[coord[1]][coord[0] + 1] == 0,
+        coord[1] < BOARD_COLS - 1 && board[coord[0]][coord[1] + 1] == 0,
     )
   ) {
     for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][0]++;
-    }
-  }
-}
-
-function moveTetrominoUp() {
-  if (currentTetrominoCoords.every((coord) => coord[1] > 0)) {
-    for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][1]--;
+      currentTetrominoCoords[index][1]++;
     }
   }
 }
@@ -412,12 +427,29 @@ function moveTetrominoUp() {
 function moveTetrominoDown() {
   if (
     currentTetrominoCoords.every(
-      (coord) =>
-        coord[1] < BOARD_ROWS - 1 && board[coord[1] + 1][coord[0]] == 0,
+      (coord) => coord[0] > 0 && board[coord[0] - 1][coord[1]] == 0,
     )
   ) {
     for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][1]++;
+      currentTetrominoCoords[index][0]--;
     }
   }
+}
+
+function moveTetrominoUp() {
+  if (
+    currentTetrominoCoords.every((coord) => coord[0] < BOARD_VISIBLE_ROWS - 1)
+  ) {
+    for (let index = 0; index < currentTetrominoCoords.length; index++) {
+      currentTetrominoCoords[index][0]++;
+    }
+  }
+}
+
+function transformRowToX(row) {
+  return BOARD_VISIBLE_ROWS - row - 1;
+}
+
+function transformColToX(col) {
+  return col;
 }
