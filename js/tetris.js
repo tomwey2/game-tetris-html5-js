@@ -3,34 +3,34 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const fps = 60;
 
-// Colors
+// colors
 const BOARD_BACKGROUND_COLOR_DARK = "#333300";
 const BOARD_BACKGROUND_COLOR_LIGHT = "#E5E5CC";
 const BOARD_TEXT_COLOR_DARK = "#4C4C4C";
 const BOARD_TEXT_COLOR_LIGHT = "#808080";
 const BOARD_TEXT_COLOR_TERIS = "#FF00FF";
 
-// Game states
+// game states
 const GAME_INIT = "GAME_INIT";
 const GAME_READY = "GAME_IS_READY";
 const GAME_IS_RUNNING = "GAME_IS_RUNNING";
 const GAME_IS_OVER = "GAME_IS_OVER";
 const GAME_IS_PAUSED = "GAME_IS_PAUSED";
 
-// Dimensions
-const BOARD_ROWS = 22;
+// dimensions
+const BOARD_ROWS = 22; // the upper two rows are not shown
 const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
-const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2);
+const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bottom margin
 
-// Tetrominos
-const TETROMINO_I = 0;
-const TETROMINO_J = 1;
-const TETROMINO_L = 2;
-const TETROMINO_O = 3;
-const TETROMINO_S = 4;
-const TETROMINO_T = 5;
-const TETROMINO_Z = 6;
+// tetrominos
+const TETROMINO_I = 1;
+const TETROMINO_J = 2;
+const TETROMINO_L = 3;
+const TETROMINO_O = 4;
+const TETROMINO_S = 5;
+const TETROMINO_T = 6;
+const TETROMINO_Z = 7;
 
 const TETROMINOS = [
   {
@@ -126,47 +126,40 @@ const TETROMINOS = [
   },
 ];
 
-// Game variables
+// game variables
 let gameInterval = setInterval(gameloop, 1000 / fps);
-let board;
+let board = Array(BOARD_ROWS)
+  .fill()
+  .map(() => Array(BOARD_COLS).fill(0));
 let gameState = GAME_INIT;
 let gameScore = 0;
 let gameLevel = 0;
-let gemeLines = 0;
+let gameLines = 0;
+let fallSpeed = 0;
 let currentTetromino = TETROMINO_I;
-let currentTetrominoCoords = [];
+let currentTetrominoCoords = Array(4);
 
-function setGameState(state) {
-  gameState = state;
-}
+gameloop();
 
-/*
-state           event               action          next state
-INIT            keypressed          board empty     RUNNING
-RUNNING         line is on top                      OVER
-OVER            keypressed                          INIT
-*/
 function gameloop() {
   switch (gameState) {
-    case GAME_INIT:
+    case GAME_INIT: // initialize the game and go to state READY
       gameInit();
       break;
-    case GAME_READY:
+    case GAME_READY: // print "ready" and wait for keypressed
       draw();
       break;
-    case GAME_IS_RUNNING:
+    case GAME_IS_RUNNING: // run the game until it is over
       update();
       draw();
       break;
-    case GAME_IS_OVER:
+    case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to INIT
       gameOver();
       draw();
       break;
   }
   console.log("state=" + gameState);
 }
-
-gameloop();
 
 window.addEventListener("keydown", (event) => {
   let k = event.keyCode;
@@ -182,7 +175,7 @@ window.addEventListener("keydown", (event) => {
     switch (gameState) {
       case GAME_READY:
         if (keyPressedSpace) {
-          setGameState(GAME_IS_RUNNING);
+          gameState = GAME_IS_RUNNING;
         }
         break;
       case GAME_IS_RUNNING:
@@ -195,46 +188,67 @@ window.addEventListener("keydown", (event) => {
         } else if (keyPressedDown) {
           moveTetrominoDown();
         } else if (keyPressedSpace) {
-          setGameState(GAME_IS_PAUSED);
+          gameState = GAME_IS_PAUSED;
         } else if (keyPressedEsc) {
-          setGameState(GAME_IS_OVER);
+          gameState = GAME_IS_OVER;
         }
         break;
       case GAME_IS_PAUSED:
         if (keyPressedSpace) {
-          setGameState(GAME_IS_RUNNING);
+          gameState = GAME_IS_RUNNING;
         } else if (keyPressedEsc) {
-          setGameState(GAME_IS_OVER);
+          gameState = GAME_IS_OVER;
         }
         break;
       case GAME_IS_OVER:
         if (keyPressedSpace) {
-          setGameState(GAME_INIT);
+          gameState = GAME_INIT;
         }
         break;
     }
   }, 1);
 });
 
-function gameInit() {
-  board = Array(BOARD_ROWS)
-    .fill()
-    .map(() => Array(BOARD_COLS).fill(0));
-  currentTetromino = getRandomInt(TETROMINOS.length);
-  currentTetrominoCoords = TETROMINOS[currentTetromino].coords.slice();
+function nextTetromino() {
+  currentTetromino = getRandomInt(TETROMINOS.length) + 1;
+  console.info("next Tetromino: " + currentTetromino);
+  for (let index = 0; index < 4; index++) {
+    currentTetrominoCoords[index] =
+      TETROMINOS[currentTetromino - 1].coords[index].slice();
+  }
   let shift = currentTetromino == TETROMINO_O ? 4 : 3;
   currentTetrominoCoords.forEach((coord) => (coord[1] = coord[1] + shift));
+}
+
+function gameInit() {
+  board.forEach((row) => row.fill(0));
+  nextTetromino();
+  fallSpeed = 1;
   // Test
   board[1][5] = TETROMINO_S;
   board[1][6] = TETROMINO_S;
   board[0][4] = TETROMINO_S;
   board[0][5] = TETROMINO_S;
-  setGameState(GAME_READY);
+  gameState = GAME_READY;
 }
 
 function gameOver() {}
 
-function update() {}
+function update() {
+  fallSpeed++;
+  if (fallSpeed > 25) {
+    moveTetrominoDown();
+    console.info("tetr:" + currentTetromino + " - " + currentTetrominoCoords);
+    if (isBottom()) {
+      for (let index = 0; index < currentTetrominoCoords.length; index++) {
+        let [row, col] = currentTetrominoCoords[index];
+        board[row][col] = currentTetromino;
+      }
+      nextTetromino();
+    }
+    fallSpeed = 1;
+  }
+}
 
 function draw() {
   drawFillRect(0, 0, canvas.width, canvas.height, BOARD_BACKGROUND_COLOR_DARK);
@@ -324,9 +338,9 @@ function drawGameBoard() {
         drawCell(
           row,
           col,
-          TETROMINOS[tetromino].colorNormal,
-          TETROMINOS[tetromino].colorLight,
-          TETROMINOS[tetromino].colorDark,
+          TETROMINOS[tetromino - 1].colorNormal,
+          TETROMINOS[tetromino - 1].colorLight,
+          TETROMINOS[tetromino - 1].colorDark,
         );
       }
     }
@@ -339,9 +353,9 @@ function drawTetromino() {
     drawCell(
       row,
       col,
-      TETROMINOS[currentTetromino].colorNormal,
-      TETROMINOS[currentTetromino].colorLight,
-      TETROMINOS[currentTetromino].colorDark,
+      TETROMINOS[currentTetromino - 1].colorNormal,
+      TETROMINOS[currentTetromino - 1].colorLight,
+      TETROMINOS[currentTetromino - 1].colorDark,
     );
   }
 }
@@ -424,12 +438,14 @@ function moveTetrominoRight() {
   }
 }
 
+function isBottom() {
+  return currentTetrominoCoords.some(
+    (coord) => coord[0] == 0 || board[coord[0] - 1][coord[1]] > 0,
+  );
+}
+
 function moveTetrominoDown() {
-  if (
-    currentTetrominoCoords.every(
-      (coord) => coord[0] > 0 && board[coord[0] - 1][coord[1]] == 0,
-    )
-  ) {
+  if (!isBottom()) {
     for (let index = 0; index < currentTetrominoCoords.length; index++) {
       currentTetrominoCoords[index][0]--;
     }
