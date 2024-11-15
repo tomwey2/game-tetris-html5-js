@@ -36,10 +36,10 @@ const TETROMINOS = [
   {
     // TETROMINO_I
     coords: [
-      [BOARD_ROWS - 2, 0],
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 2, 2],
-      [BOARD_ROWS - 2, 3],
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
     ],
     // lightblue
     colorNormal: "#80C0FF",
@@ -49,10 +49,10 @@ const TETROMINOS = [
   {
     // TETROMINO_J
     coords: [
-      [BOARD_ROWS - 1, 0],
-      [BOARD_ROWS - 1, 1],
-      [BOARD_ROWS - 2, 2],
-      [BOARD_ROWS - 1, 2],
+      [1, 0],
+      [1, 1],
+      [0, 2],
+      [1, 2],
     ],
     // darkblue
     colorNormal: "#004C99",
@@ -62,10 +62,10 @@ const TETROMINOS = [
   {
     // TETROMINO_L
     coords: [
-      [BOARD_ROWS - 2, 0],
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 2, 2],
-      [BOARD_ROWS - 1, 2],
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [1, 2],
     ],
     // orange
     colorNormal: "#FFC080",
@@ -75,10 +75,10 @@ const TETROMINOS = [
   {
     // TETROMINO_O
     coords: [
-      [BOARD_ROWS - 2, 0],
-      [BOARD_ROWS - 1, 0],
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 1, 1],
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
     ],
     // yellow
     colorNormal: "#CCCC00",
@@ -88,10 +88,10 @@ const TETROMINOS = [
   {
     // TETROMINO_S
     coords: [
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 2, 2],
-      [BOARD_ROWS - 1, 0],
-      [BOARD_ROWS - 1, 1],
+      [0, 1],
+      [0, 2],
+      [1, 0],
+      [1, 1],
     ],
     // green
     colorNormal: "#80FF80",
@@ -101,10 +101,10 @@ const TETROMINOS = [
   {
     // TETROMINO_T
     coords: [
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 1, 0],
-      [BOARD_ROWS - 1, 1],
-      [BOARD_ROWS - 1, 2],
+      [0, 1],
+      [1, 0],
+      [1, 1],
+      [1, 2],
     ],
     // magenta
     colorNormal: "#C080FF",
@@ -114,10 +114,10 @@ const TETROMINOS = [
   {
     // TETROMINO_Z
     coords: [
-      [BOARD_ROWS - 2, 0],
-      [BOARD_ROWS - 2, 1],
-      [BOARD_ROWS - 1, 1],
-      [BOARD_ROWS - 1, 2],
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 2],
     ],
     // red
     colorNormal: "#990000",
@@ -217,7 +217,10 @@ function nextTetromino() {
       TETROMINOS[currentTetromino - 1].coords[index].slice();
   }
   let shift = currentTetromino == TETROMINO_O ? 4 : 3;
-  currentTetrominoCoords.forEach((coord) => (coord[1] = coord[1] + shift));
+  currentTetrominoCoords.forEach((coord) => {
+    coord[0] = coord[0] + (BOARD_ROWS - 2);
+    coord[1] = coord[1] + shift;
+  });
 }
 
 function gameInit() {
@@ -238,7 +241,6 @@ function update() {
   fallSpeed++;
   if (fallSpeed > 25) {
     moveTetrominoDown();
-    console.info("tetr:" + currentTetromino + " - " + currentTetrominoCoords);
     if (isBottom()) {
       for (let index = 0; index < currentTetrominoCoords.length; index++) {
         let [row, col] = currentTetrominoCoords[index];
