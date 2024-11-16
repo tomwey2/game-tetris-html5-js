@@ -40,30 +40,35 @@ let currentTetromino = TETROMINO_I;
 let currentOffset = [0, 0];
 let updateIntervall = 0;
 let rotationIndex = 0;
+let gameBoardWidth = CELL_WIDTH * (BOARD_COLS + 2);
+let infoBoardWidth = canvas.width - gameBoardWidth - CELL_WIDTH;
+let infoBoardCenter = gameBoardWidth + infoBoardWidth / 2;
 
 gameloop();
 
 function gameloop() {
+  console.log("state=" + gameState);
   switch (gameState) {
     case GAME_INIT: // initialize the game and go to state READY
       gameInit();
       break;
     case GAME_READY: // print "ready" and wait for keypressed
       draw();
+      drawReady();
       break;
     case GAME_IS_RUNNING: // run the game until it is over
       draw();
       break;
     case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to INIT
-      gameOver();
       draw();
+      drawGameOver();
       break;
   }
-  console.log("state=" + gameState);
 }
 
 window.addEventListener("keydown", (event) => {
   let k = event.keyCode;
+  let key = event.key;
 
   const keyPressedLeft = k == 37 || k == 65; // LEFT || A
   const keyPressedRight = k == 39 || k == 68; // RIGHT || D
@@ -71,6 +76,7 @@ window.addEventListener("keydown", (event) => {
   const keyPressedDown = k == 40 || k == 77; // DOWN || M
   const keyPressedSpace = k == 32; // SPACE
   const keyPressedEsc = k == 27; // ESC
+  const keyPressedP = key == "p" || key == "P";
 
   setTimeout(() => {
     switch (gameState) {
@@ -88,7 +94,7 @@ window.addEventListener("keydown", (event) => {
           rotateClockwise();
         } else if (keyPressedDown) {
           dropDownTetromino();
-        } else if (keyPressedSpace) {
+        } else if (keyPressedP) {
           gameState = GAME_IS_PAUSED;
         } else if (keyPressedEsc) {
           gameState = GAME_IS_OVER;
@@ -131,22 +137,19 @@ function gameInit() {
   board.forEach((row) => row.fill(0));
   nextTetromino();
   setSpeed(SPEED_NORMAL);
-  // Test
-  board[1][5] = TETROMINO_S;
-  board[1][6] = TETROMINO_S;
-  board[0][4] = TETROMINO_S;
-  board[0][5] = TETROMINO_S;
   gameState = GAME_READY;
 }
-
-function gameOver() {}
 
 function update() {
   if (gameState != GAME_IS_RUNNING) return;
   moveDownTetromino();
   if (isBottom()) {
-    setTetrominoIntoBoard();
-    nextTetromino();
+    if (isGameOver()) {
+      gameState = GAME_IS_OVER;
+    } else {
+      setTetrominoIntoBoard();
+      nextTetromino();
+    }
     setSpeed(SPEED_NORMAL);
   }
 }
@@ -168,23 +171,26 @@ function dropDownTetromino() {
   setSpeed(SPEED_DROPDOWN);
 }
 
+function currentCoords() {
+  return TETROMINOS[currentTetromino - 1].coords[rotationIndex].map((coord) => [
+    coord[0] + currentOffset[0],
+    coord[1] + currentOffset[1],
+  ]);
+}
+
 function moveLeftTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
-    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
-  );
   if (
-    coords.every((coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0)
+    currentCoords().every(
+      (coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0,
+    )
   ) {
     currentOffset[1]--;
   }
 }
 
 function moveRightTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
-    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
-  );
   if (
-    coords.every(
+    currentCoords().every(
       (coord) =>
         coord[1] < BOARD_COLS - 1 && board[coord[0]][coord[1] + 1] == 0,
     )
@@ -193,11 +199,13 @@ function moveRightTetromino() {
   }
 }
 
+function isGameOver() {
+  let rows = currentCoords().map((coord) => coord[0]);
+  return Math.min(...rows) > BOARD_VISIBLE_ROWS - 2;
+}
+
 function isBottom() {
-  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
-    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
-  );
-  return coords.some(
+  return currentCoords().some(
     (coord) => coord[0] == 0 || board[coord[0] - 1][coord[1]] > 0,
   );
 }
@@ -212,14 +220,16 @@ function draw() {
   drawFillRect(0, 0, canvas.width, canvas.height, BOARD_BACKGROUND_COLOR_DARK);
   drawInfoBoard();
   drawGameBoard();
-  drawTetromino();
+  drawTetromino(0, 0, currentTetromino, currentCoords());
+  drawTetromino(
+    13,
+    14,
+    currentTetromino,
+    TETROMINOS[currentTetromino - 1].coords[0],
+  );
 }
 
 function drawInfoBoard() {
-  let gameBoardWidth = CELL_WIDTH * (BOARD_COLS + 2);
-  let infoBoardWidth = canvas.width - gameBoardWidth - CELL_WIDTH;
-  let infoBoardCenter = gameBoardWidth + infoBoardWidth / 2;
-
   drawText(
     infoBoardCenter,
     CELL_WIDTH * 2,
@@ -330,18 +340,15 @@ function drawGameBoard() {
   }
 }
 
-function drawTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
-    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
-  );
+function drawTetromino(offsetRow, offsetCol, tetramino, coords) {
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
     drawCell(
-      row,
-      col,
-      TETROMINOS[currentTetromino - 1].colorNormal,
-      TETROMINOS[currentTetromino - 1].colorLight,
-      TETROMINOS[currentTetromino - 1].colorDark,
+      row + offsetRow,
+      col + offsetCol,
+      TETROMINOS[tetramino - 1].colorNormal,
+      TETROMINOS[tetramino - 1].colorLight,
+      TETROMINOS[tetramino - 1].colorDark,
     );
   }
 }
@@ -396,6 +403,50 @@ function drawCell(row, col, colorNormal, colorLight, colorDark) {
     CELL_WIDTH - 8,
     CELL_WIDTH - 8,
     colorNormal,
+  );
+}
+
+function drawReady() {
+  drawFillRect(
+    CELL_WIDTH * 3,
+    CELL_WIDTH * 8,
+    CELL_WIDTH * 14,
+    CELL_WIDTH * 5,
+    BOARD_BACKGROUND_COLOR_DARK,
+  );
+  drawText(
+    CELL_WIDTH * 10,
+    CELL_WIDTH * 10,
+    "Ready",
+    BOARD_BACKGROUND_COLOR_LIGHT,
+    "center",
+    "middle",
+  );
+  drawText(
+    CELL_WIDTH * 10,
+    CELL_WIDTH * 11,
+    "Press any key!",
+    BOARD_BACKGROUND_COLOR_LIGHT,
+    "center",
+    "middle",
+  );
+}
+
+function drawGameOver() {
+  drawFillRect(
+    CELL_WIDTH * 3,
+    CELL_WIDTH * 8,
+    CELL_WIDTH * 14,
+    CELL_WIDTH * 5,
+    BOARD_BACKGROUND_COLOR_DARK,
+  );
+  drawText(
+    CELL_WIDTH * 10,
+    CELL_WIDTH * 10,
+    "Game Over!",
+    BOARD_BACKGROUND_COLOR_LIGHT,
+    "center",
+    "middle",
   );
 }
 
