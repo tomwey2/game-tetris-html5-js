@@ -22,9 +22,13 @@ const BOARD_ROWS = 22; // the upper two rows are not shown
 const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
 const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bottom margin
+const BOARD_WIDTH = CELL_WIDTH * (BOARD_COLS + 2);
+const INFO_BOARD_WIDTH = canvas.width - BOARD_WIDTH - CELL_WIDTH;
+const INFO_BOARD_CENTER = BOARD_WIDTH + INFO_BOARD_WIDTH / 2;
 
-//
-const SPEED_NORMAL = 1000;
+// game dynamic
+//         Level:     0     1    2    3    4    5    6   7   8   9  10 and more
+const LEVEL_SPEED = [1000, 800, 600, 400, 200, 100, 90, 80, 70, 60, 50];
 const SPEED_DROPDOWN = 50;
 
 // game variables
@@ -40,9 +44,6 @@ let currentTetromino = TETROMINO_I;
 let currentOffset = [0, 0];
 let updateIntervall = 0;
 let rotationIndex = 0;
-let gameBoardWidth = CELL_WIDTH * (BOARD_COLS + 2);
-let infoBoardWidth = canvas.width - gameBoardWidth - CELL_WIDTH;
-let infoBoardCenter = gameBoardWidth + infoBoardWidth / 2;
 
 gameloop();
 
@@ -136,7 +137,8 @@ function nextTetromino() {
 function gameInit() {
   board.forEach((row) => row.fill(0));
   nextTetromino();
-  setSpeed(SPEED_NORMAL);
+  gameLevel = 0;
+  setSpeed(LEVEL_SPEED[gameLevel]);
   gameState = GAME_READY;
 }
 
@@ -148,9 +150,14 @@ function update() {
       gameState = GAME_IS_OVER;
     } else {
       setTetrominoIntoBoard();
+      clearLines();
       nextTetromino();
     }
-    setSpeed(SPEED_NORMAL);
+    gameLevel = Math.round(gameLines / 10);
+    if (gameLevel > 10) {
+      gameLevel = 10;
+    }
+    setSpeed(LEVEL_SPEED[gameLevel]);
   }
 }
 
@@ -165,6 +172,27 @@ function setTetrominoIntoBoard() {
 function rotateClockwise() {
   rotationIndex = rotationIndex < 3 ? rotationIndex + 1 : 0;
   console.log("rotate: " + rotationIndex);
+}
+
+function clearLines() {
+  let lines = 1;
+  gameLines += lines;
+  gameScore += scoreOfClearLines(lines);
+}
+
+function scoreOfClearLines(clearlines) {
+  switch (clearlines) {
+    case 1:
+      return 100;
+    case 2:
+      return 300;
+    case 3:
+      return 500;
+    case 4:
+      return 800;
+    default:
+      return 0;
+  }
 }
 
 function dropDownTetromino() {
@@ -231,7 +259,7 @@ function draw() {
 
 function drawInfoBoard() {
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 2,
     "TETRIS",
     BOARD_TEXT_COLOR_TERIS,
@@ -241,14 +269,14 @@ function drawInfoBoard() {
   );
 
   drawFillRect(
-    gameBoardWidth,
+    BOARD_WIDTH,
     CELL_WIDTH * 3,
-    infoBoardWidth,
+    INFO_BOARD_WIDTH,
     CELL_WIDTH * 7,
     BOARD_BACKGROUND_COLOR_LIGHT,
   );
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 4,
     "NEXT",
     BOARD_BACKGROUND_COLOR_DARK,
@@ -256,14 +284,14 @@ function drawInfoBoard() {
     "middle",
   );
   drawFillRect(
-    gameBoardWidth,
+    BOARD_WIDTH,
     CELL_WIDTH * 11,
-    infoBoardWidth,
+    INFO_BOARD_WIDTH,
     CELL_WIDTH * 10,
     BOARD_BACKGROUND_COLOR_LIGHT,
   );
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 12,
     "SCORE",
     BOARD_TEXT_COLOR_LIGHT,
@@ -271,7 +299,7 @@ function drawInfoBoard() {
     "middle",
   );
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 13,
     gameScore.toString(),
     BOARD_BACKGROUND_COLOR_DARK,
@@ -280,7 +308,7 @@ function drawInfoBoard() {
   );
 
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 15,
     "LEVEL",
     BOARD_TEXT_COLOR_LIGHT,
@@ -288,16 +316,16 @@ function drawInfoBoard() {
     "middle",
   );
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 16,
-    gameLevel.toString(),
+    (gameLevel + 1).toString(),
     BOARD_BACKGROUND_COLOR_DARK,
     "center",
     "middle",
   );
 
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 18,
     "LINES",
     BOARD_TEXT_COLOR_LIGHT,
@@ -305,7 +333,7 @@ function drawInfoBoard() {
     "middle",
   );
   drawText(
-    infoBoardCenter,
+    INFO_BOARD_CENTER,
     CELL_WIDTH * 19,
     gameLines.toString(),
     BOARD_BACKGROUND_COLOR_DARK,
