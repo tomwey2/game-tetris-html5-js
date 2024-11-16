@@ -23,6 +23,10 @@ const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
 const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bottom margin
 
+//
+const SPEED_NORMAL = 1000;
+const SPEED_DROPDOWN = 50;
+
 // tetrominos
 const TETROMINO_I = 1;
 const TETROMINO_J = 2;
@@ -135,9 +139,9 @@ let gameState = GAME_INIT;
 let gameScore = 0;
 let gameLevel = 0;
 let gameLines = 0;
-let fallSpeed = 0;
 let currentTetromino = TETROMINO_I;
 let currentTetrominoCoords = Array(4);
+let updateIntervall = 0;
 
 gameloop();
 
@@ -150,7 +154,6 @@ function gameloop() {
       draw();
       break;
     case GAME_IS_RUNNING: // run the game until it is over
-      update();
       draw();
       break;
     case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to INIT
@@ -180,13 +183,13 @@ window.addEventListener("keydown", (event) => {
         break;
       case GAME_IS_RUNNING:
         if (keyPressedLeft) {
-          moveTetrominoLeft();
+          moveLeftTetromino();
         } else if (keyPressedRight) {
-          moveTetrominoRight();
+          moveRightTetromino();
         } else if (keyPressedUp) {
-          moveTetrominoUp();
+          moveUpTetromino();
         } else if (keyPressedDown) {
-          moveTetrominoDown();
+          dropDownTetromino();
         } else if (keyPressedSpace) {
           gameState = GAME_IS_PAUSED;
         } else if (keyPressedEsc) {
@@ -209,24 +212,32 @@ window.addEventListener("keydown", (event) => {
   }, 1);
 });
 
+function setSpeed(speed) {
+  if (updateIntervall != 0) {
+    clearInterval(updateIntervall);
+  }
+  updateIntervall = setInterval(() => update(), speed);
+}
+
 function nextTetromino() {
   currentTetromino = getRandomInt(TETROMINOS.length) + 1;
-  console.info("next Tetromino: " + currentTetromino);
+  // copy tetromino coordinates into currentTertromino
   for (let index = 0; index < 4; index++) {
     currentTetrominoCoords[index] =
       TETROMINOS[currentTetromino - 1].coords[index].slice();
   }
-  let shift = currentTetromino == TETROMINO_O ? 4 : 3;
+  let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
+  let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
   currentTetrominoCoords.forEach((coord) => {
-    coord[0] = coord[0] + (BOARD_ROWS - 2);
-    coord[1] = coord[1] + shift;
+    coord[0] = coord[0] + yOffset;
+    coord[1] = coord[1] + xOffset;
   });
 }
 
 function gameInit() {
   board.forEach((row) => row.fill(0));
   nextTetromino();
-  fallSpeed = 1;
+  setSpeed(SPEED_NORMAL);
   // Test
   board[1][5] = TETROMINO_S;
   board[1][6] = TETROMINO_S;
@@ -238,23 +249,77 @@ function gameInit() {
 function gameOver() {}
 
 function update() {
-  fallSpeed++;
-  if (fallSpeed > 25) {
-    moveTetrominoDown();
-    if (isBottom()) {
-      for (let index = 0; index < currentTetrominoCoords.length; index++) {
-        let [row, col] = currentTetrominoCoords[index];
-        board[row][col] = currentTetromino;
-      }
-      nextTetromino();
+  if (gameState != GAME_IS_RUNNING) return;
+  moveDownTetromino();
+  if (isBottom()) {
+    setTetrominoIntoBoard();
+    nextTetromino();
+    setSpeed(SPEED_NORMAL);
+  }
+}
+
+function setTetrominoIntoBoard() {
+  for (let index = 0; index < currentTetrominoCoords.length; index++) {
+    let [row, col] = currentTetrominoCoords[index];
+    board[row][col] = currentTetromino;
+  }
+}
+
+function dropDownTetromino() {
+  setSpeed(SPEED_DROPDOWN);
+}
+
+function moveLeftTetromino() {
+  if (
+    currentTetrominoCoords.every(
+      (coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0,
+    )
+  ) {
+    for (let index = 0; index < currentTetrominoCoords.length; index++) {
+      currentTetrominoCoords[index][1]--;
     }
-    fallSpeed = 1;
+  }
+}
+
+function moveRightTetromino() {
+  if (
+    currentTetrominoCoords.every(
+      (coord) =>
+        coord[1] < BOARD_COLS - 1 && board[coord[0]][coord[1] + 1] == 0,
+    )
+  ) {
+    for (let index = 0; index < currentTetrominoCoords.length; index++) {
+      currentTetrominoCoords[index][1]++;
+    }
+  }
+}
+
+function isBottom() {
+  return currentTetrominoCoords.some(
+    (coord) => coord[0] == 0 || board[coord[0] - 1][coord[1]] > 0,
+  );
+}
+
+function moveDownTetromino() {
+  if (!isBottom()) {
+    for (let index = 0; index < currentTetrominoCoords.length; index++) {
+      currentTetrominoCoords[index][0]--;
+    }
+  }
+}
+
+function moveUpTetromino() {
+  if (
+    currentTetrominoCoords.every((coord) => coord[0] < BOARD_VISIBLE_ROWS - 1)
+  ) {
+    for (let index = 0; index < currentTetrominoCoords.length; index++) {
+      currentTetrominoCoords[index][0]++;
+    }
   }
 }
 
 function draw() {
   drawFillRect(0, 0, canvas.width, canvas.height, BOARD_BACKGROUND_COLOR_DARK);
-
   drawInfoBoard();
   drawGameBoard();
   drawTetromino();
@@ -413,55 +478,6 @@ function drawCell(row, col, colorNormal, colorLight, colorDark) {
     CELL_WIDTH - 8,
     colorNormal,
   );
-}
-
-function moveTetrominoLeft() {
-  if (
-    currentTetrominoCoords.every(
-      (coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0,
-    )
-  ) {
-    for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][1]--;
-    }
-  }
-}
-
-function moveTetrominoRight() {
-  if (
-    currentTetrominoCoords.every(
-      (coord) =>
-        coord[1] < BOARD_COLS - 1 && board[coord[0]][coord[1] + 1] == 0,
-    )
-  ) {
-    for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][1]++;
-    }
-  }
-}
-
-function isBottom() {
-  return currentTetrominoCoords.some(
-    (coord) => coord[0] == 0 || board[coord[0] - 1][coord[1]] > 0,
-  );
-}
-
-function moveTetrominoDown() {
-  if (!isBottom()) {
-    for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][0]--;
-    }
-  }
-}
-
-function moveTetrominoUp() {
-  if (
-    currentTetrominoCoords.every((coord) => coord[0] < BOARD_VISIBLE_ROWS - 1)
-  ) {
-    for (let index = 0; index < currentTetrominoCoords.length; index++) {
-      currentTetrominoCoords[index][0]++;
-    }
-  }
 }
 
 function transformRowToX(row) {
