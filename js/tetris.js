@@ -372,6 +372,15 @@ function drawInfoBoard() {
   );
   drawText(
     infoBoardCenter,
+    CELL_WIDTH * 13,
+    gameScore.toString(),
+    BOARD_BACKGROUND_COLOR_DARK,
+    "center",
+    "middle",
+  );
+
+  drawText(
+    infoBoardCenter,
     CELL_WIDTH * 15,
     "LEVEL",
     BOARD_TEXT_COLOR_LIGHT,
@@ -380,9 +389,26 @@ function drawInfoBoard() {
   );
   drawText(
     infoBoardCenter,
+    CELL_WIDTH * 16,
+    gameLevel.toString(),
+    BOARD_BACKGROUND_COLOR_DARK,
+    "center",
+    "middle",
+  );
+
+  drawText(
+    infoBoardCenter,
     CELL_WIDTH * 18,
     "LINES",
     BOARD_TEXT_COLOR_LIGHT,
+    "center",
+    "middle",
+  );
+  drawText(
+    infoBoardCenter,
+    CELL_WIDTH * 19,
+    gameLines.toString(),
+    BOARD_BACKGROUND_COLOR_DARK,
     "center",
     "middle",
   );
