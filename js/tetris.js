@@ -27,115 +27,6 @@ const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bot
 const SPEED_NORMAL = 1000;
 const SPEED_DROPDOWN = 50;
 
-// tetrominos
-const TETROMINO_I = 1;
-const TETROMINO_J = 2;
-const TETROMINO_L = 3;
-const TETROMINO_O = 4;
-const TETROMINO_S = 5;
-const TETROMINO_T = 6;
-const TETROMINO_Z = 7;
-
-const TETROMINOS = [
-  {
-    // TETROMINO_I
-    coords: [
-      [0, -1],
-      [0, 0],
-      [0, 1],
-      [0, 2],
-    ],
-    // lightblue
-    colorNormal: "#80C0FF",
-    colorLight: "#C0E0FF",
-    colorDark: "#3399FF",
-  },
-  {
-    // TETROMINO_J
-    coords: [
-      [1, -1],
-      [0, -1],
-      [0, 0],
-      [0, 1],
-    ],
-    // darkblue
-    colorNormal: "#004C99",
-    colorLight: "#0066CC",
-    colorDark: "#003366",
-  },
-  {
-    // TETROMINO_L
-    coords: [
-      [0, -1],
-      [0, 0],
-      [0, 1],
-      [1, 1],
-    ],
-    // orange
-    colorNormal: "#FFC080",
-    colorLight: "#FFE0C0",
-    colorDark: "#FFA040",
-  },
-  {
-    // TETROMINO_O
-    coords: [
-      [1, 0],
-      [0, 0],
-      [0, 1],
-      [1, 1],
-    ],
-    // yellow
-    colorNormal: "#CCCC00",
-    colorLight: "#FFFF80",
-    colorDark: "#C0C000",
-  },
-  {
-    // TETROMINO_S
-    coords: [
-      [0, -1],
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ],
-    // green
-    colorNormal: "#80FF80",
-    colorLight: "#C0FFC0",
-    colorDark: "#00FF00",
-  },
-  {
-    // TETROMINO_T
-    coords: [
-      [0, -1],
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ],
-    // magenta
-    colorNormal: "#C080FF",
-    colorLight: "#E0C0FF",
-    colorDark: "#A040FF",
-  },
-  {
-    // TETROMINO_Z
-    coords: [
-      [1, -1],
-      [1, 0],
-      [0, 0],
-      [0, 1],
-    ],
-    // red
-    colorNormal: "#990000",
-    colorLight: "#CC0000",
-    colorDark: "#660000",
-  },
-];
-const rotationOffsetValues = [
-  [0, 0],
-  [0, -1],
-  [-1, -1],
-  [-1, 0],
-];
-
 // game variables
 let gameInterval = setInterval(gameloop, 1000 / fps);
 let board = Array(BOARD_ROWS)
@@ -232,6 +123,8 @@ function nextTetromino() {
   let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
   let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
   currentOffset = [yOffset, xOffset];
+  rotationIndex = 0;
+  console.info("next: " + currentTetromino);
 }
 
 function gameInit() {
@@ -259,7 +152,7 @@ function update() {
 }
 
 function setTetrominoIntoBoard() {
-  let coords = TETROMINOS[currentTetromino - 1].coords;
+  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex];
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
     board[row + currentOffset[0]][col + currentOffset[1]] = currentTetromino;
@@ -276,10 +169,9 @@ function dropDownTetromino() {
 }
 
 function moveLeftTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords.map((coord) => [
-    coord[0] + currentOffset[0],
-    coord[1] + currentOffset[1],
-  ]);
+  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
+    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
+  );
   if (
     coords.every((coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0)
   ) {
@@ -288,10 +180,9 @@ function moveLeftTetromino() {
 }
 
 function moveRightTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords.map((coord) => [
-    coord[0] + currentOffset[0],
-    coord[1] + currentOffset[1],
-  ]);
+  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
+    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
+  );
   if (
     coords.every(
       (coord) =>
@@ -303,10 +194,9 @@ function moveRightTetromino() {
 }
 
 function isBottom() {
-  let coords = TETROMINOS[currentTetromino - 1].coords.map((coord) => [
-    coord[0] + currentOffset[0],
-    coord[1] + currentOffset[1],
-  ]);
+  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
+    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
+  );
   return coords.some(
     (coord) => coord[0] == 0 || board[coord[0] - 1][coord[1]] > 0,
   );
@@ -316,8 +206,6 @@ function moveDownTetromino() {
   if (!isBottom()) {
     currentOffset[0]--;
   }
-
-  console.info("coords=" + currentOffset);
 }
 
 function draw() {
@@ -443,10 +331,9 @@ function drawGameBoard() {
 }
 
 function drawTetromino() {
-  let coords = TETROMINOS[currentTetromino - 1].coords.map((coord) => [
-    coord[0] + currentOffset[0],
-    coord[1] + currentOffset[1],
-  ]);
+  let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex].map(
+    (coord) => [coord[0] + currentOffset[0], coord[1] + currentOffset[1]],
+  );
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
     drawCell(
