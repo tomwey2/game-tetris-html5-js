@@ -7,6 +7,7 @@ const TETROMINO_O = 4;
 const TETROMINO_S = 5;
 const TETROMINO_T = 6;
 const TETROMINO_Z = 7;
+const ALL_TETROMINOS = [1, 2, 3, 4, 5, 6, 7];
 
 const TETROMINOS = [
   {

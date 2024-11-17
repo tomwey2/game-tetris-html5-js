@@ -7,7 +7,7 @@ const fps = 60;
 // colors
 const BOARD_BACKGROUND_COLOR_DARK = "#333300";
 const BOARD_BACKGROUND_COLOR_LIGHT = "#E5E5CC";
-const BOARD_TEXT_COLOR_NORMAL = "#4C4C4C";
+const TEXT_COLOR_NORMAL = "#4C4C4C";
 const TEXT_COLOR_DARK = "#202020";
 const TEXT_COLOR_LIGHT = "#808080";
 const TEXT_COLOR_TERIS = "#FF00FF";
@@ -48,8 +48,6 @@ let updateIntervall = 0;
 let rotationIndex = 0;
 let nextTetrominos = [];
 let nextTetromino = 0;
-
-gameloop();
 
 function gameloop() {
   console.log("state=" + gameState);
@@ -98,7 +96,7 @@ window.addEventListener("keydown", (event) => {
           moveRightTetromino();
         } else if (keyPressedUp) {
           rotateClockwise();
-        } else if (keyPressedDown) {
+        } else if (keyPressedDown || keyPressedSpace) {
           hardDropTetromino();
         } else if (keyPressedP) {
           gameState = GAME_IS_PAUSED;
@@ -132,10 +130,9 @@ function setSpeed(speed) {
 function getNextTetromino() {
   currentTetromino = nextTetrominos.pop();
   if (nextTetrominos.length == 0) {
-    nextTetrominos = shuffle([1, 2, 3, 4, 5, 6, 7]);
+    nextTetrominos = shuffle(ALL_TETROMINOS.slice());
   }
   nextTetromino = nextTetrominos.at(nextTetrominos.length - 1);
-  // copy tetromino coordinates into currentTertromino
   let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
   let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
   currentOffset = [yOffset, xOffset];
@@ -147,7 +144,7 @@ function gameInit() {
   gameLevel = 0;
   setSpeed(LEVEL_SPEED[gameLevel]);
   gameState = GAME_READY;
-  nextTetrominos = shuffle([1, 2, 3, 4, 5, 6, 7]);
+  nextTetrominos = shuffle(ALL_TETROMINOS.slice());
   getNextTetromino();
 }
 
@@ -285,7 +282,7 @@ function draw() {
       drawCell(
         row,
         col,
-        BOARD_TEXT_COLOR_NORMAL,
+        TEXT_COLOR_NORMAL,
         TEXT_COLOR_LIGHT,
         TEXT_COLOR_DARK,
         false,
