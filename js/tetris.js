@@ -150,7 +150,9 @@ function update() {
       gameState = GAME_IS_OVER;
     } else {
       setTetrominoIntoBoard();
-      clearLines();
+      let lines = clearLines();
+      gameLines += lines;
+      gameScore += scoreOfClearLines(lines);
       nextTetromino();
     }
     gameLevel = Math.round(gameLines / 10);
@@ -170,18 +172,34 @@ function setTetrominoIntoBoard() {
 }
 
 function rotateClockwise() {
+  let oldIndex = rotationIndex;
   rotationIndex = rotationIndex < 3 ? rotationIndex + 1 : 0;
-  console.log("rotate: " + rotationIndex);
+  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
+    rotationIndex = oldIndex;
+  }
 }
 
 function clearLines() {
-  let lines = 1;
-  gameLines += lines;
-  gameScore += scoreOfClearLines(lines);
+  let lines = 0;
+  for (let row = BOARD_VISIBLE_ROWS - 1; row >= 0; row--) {
+    if (board[row].every((cell) => cell > 0)) {
+      clearLine(row);
+      lines++;
+    }
+  }
+  return lines;
 }
 
-function scoreOfClearLines(clearlines) {
-  switch (clearlines) {
+function clearLine(line) {
+  for (let row = line; row < BOARD_VISIBLE_ROWS - 1; row++) {
+    for (let col = 0; col < BOARD_COLS; col++) {
+      board[row][col] = board[row + 1][col];
+    }
+  }
+}
+
+function scoreOfClearLines(lines) {
+  switch (lines) {
     case 1:
       return 100;
     case 2:
@@ -206,24 +224,31 @@ function currentCoords() {
   ]);
 }
 
+function allCoordsAreInsideOfBoard() {
+  return currentCoords().every(
+    (coord) =>
+      coord[0] >= 0 &&
+      coord[0] < BOARD_ROWS &&
+      coord[1] >= 0 &&
+      coord[1] < BOARD_COLS,
+  );
+}
+
+function allCellsOfBoardAreFree() {
+  return currentCoords().every((coord) => board[coord[0]][coord[1]] == 0);
+}
+
 function moveLeftTetromino() {
-  if (
-    currentCoords().every(
-      (coord) => coord[1] > 0 && board[coord[0]][coord[1] - 1] == 0,
-    )
-  ) {
-    currentOffset[1]--;
+  currentOffset[1]--;
+  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
+    currentOffset[1]++;
   }
 }
 
 function moveRightTetromino() {
-  if (
-    currentCoords().every(
-      (coord) =>
-        coord[1] < BOARD_COLS - 1 && board[coord[0]][coord[1] + 1] == 0,
-    )
-  ) {
-    currentOffset[1]++;
+  currentOffset[1]++;
+  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
+    currentOffset[1]--;
   }
 }
 
