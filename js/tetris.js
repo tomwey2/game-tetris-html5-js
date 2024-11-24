@@ -20,10 +20,12 @@ const GAME_IS_OVER = "GAME_IS_OVER";
 const GAME_IS_PAUSED = "GAME_IS_PAUSED";
 
 // dimensions
+canvas.height = window.innerHeight;
 const BOARD_ROWS = 22; // the upper two rows are not shown
 const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
 const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bottom margin
+canvas.width = CELL_WIDTH * 19;
 const BOARD_WIDTH = CELL_WIDTH * (BOARD_COLS + 2);
 const INFO_BOARD_WIDTH = canvas.width - BOARD_WIDTH - CELL_WIDTH;
 const INFO_BOARD_CENTER = BOARD_WIDTH + INFO_BOARD_WIDTH / 2;
@@ -44,10 +46,12 @@ let gameLevel = 0;
 let gameLines = 0;
 let currentTetromino = TETROMINO_I;
 let currentOffset = [0, 0];
-let updateIntervall = 0;
+let updateInterval = 0;
 let rotationIndex = 0;
 let nextTetrominos = [];
 let nextTetromino = 0;
+let touchMoveX = 0;
+let touchMoveY = 0;
 
 function gameloop() {
   console.log("state=" + gameState);
@@ -70,17 +74,21 @@ function gameloop() {
   }
 }
 
+function userinput(keypressed) {}
+
 window.addEventListener("keydown", (event) => {
-  let k = event.keyCode;
+  let code = event.keyCode;
   let key = event.key;
 
-  const keyPressedLeft = k == 37 || k == 65; // LEFT || A
-  const keyPressedRight = k == 39 || k == 68; // RIGHT || D
-  const keyPressedUp = k == 38 || k == 76; // UP || L
-  const keyPressedDown = k == 40 || k == 77; // DOWN || M
-  const keyPressedSpace = k == 32; // SPACE
-  const keyPressedEsc = k == 27; // ESC
+  const keyPressedLeft = code == 37; // LEFT
+  const keyPressedRight = code == 39; // RIGHT
+  const keyPressedUp = code == 38; // UP
+  const keyPressedDown = code == 40; // DOWN
+  const keyPressedSpace = code == 32; // SPACE
+  const keyPressedEsc = code == 27; // ESC
   const keyPressedP = key == "p" || key == "P";
+  const keyPressedA = key == "a" || key == "A";
+  const keyPressedD = key == "d" || key == "D";
 
   setTimeout(() => {
     switch (gameState) {
@@ -90,9 +98,9 @@ window.addEventListener("keydown", (event) => {
         }
         break;
       case GAME_IS_RUNNING:
-        if (keyPressedLeft) {
+        if (keyPressedLeft || keyPressedA) {
           moveLeftTetromino();
-        } else if (keyPressedRight) {
+        } else if (keyPressedRight || keyPressedD) {
           moveRightTetromino();
         } else if (keyPressedUp) {
           rotateClockwise();
@@ -120,11 +128,54 @@ window.addEventListener("keydown", (event) => {
   }, 1);
 });
 
-function setSpeed(speed) {
-  if (updateIntervall != 0) {
-    clearInterval(updateIntervall);
+canvas.addEventListener("touchstart", (event) => {
+  event.preventDefault();
+  touchMoveX = event.touches[0].screenX;
+  touchMoveY = event.touches[0].screenY;
+});
+
+canvas.addEventListener("touchend", (event) => {
+  event.preventDefault();
+  const touches = event.changedTouches;
+  if (touches.length > 0) {
+    const dx = touches[0].screenX - touchMoveX;
+    const dy = touches[0].screenY - touchMoveY;
+    const touchLeft = Math.abs(dx) > Math.abs(dy) && dx < 0;
+    const touchRight = Math.abs(dx) > Math.abs(dy) && dx > 0;
+    const touchUp = Math.abs(dx) < Math.abs(dy) && dy < 0;
+    const touchDown = Math.abs(dx) < Math.abs(dy) && dy > 0;
+
+    switch (gameState) {
+      case GAME_READY:
+        if (touchLeft || touchRight) {
+          gameState = GAME_IS_RUNNING;
+        }
+        break;
+      case GAME_IS_RUNNING:
+        if (touchLeft) {
+          moveLeftTetromino();
+        } else if (touchRight) {
+          moveRightTetromino();
+        } else if (touchUp) {
+          rotateClockwise();
+        } else if (touchDown) {
+          hardDropTetromino();
+        }
+        break;
+      case GAME_IS_OVER:
+        if (touchLeft || touchRight) {
+          gameState = GAME_INIT;
+        }
+        break;
+    }
   }
-  updateIntervall = setInterval(() => update(), speed);
+});
+
+function setSpeed(speed) {
+  if (updateInterval != 0) {
+    clearInterval(updateInterval);
+  }
+  updateInterval = setInterval(() => update(), speed);
 }
 
 function getNextTetromino() {
@@ -293,11 +344,17 @@ function draw() {
   drawInfoBoard();
   drawGameBoard();
   drawTetromino(0, 0, currentTetromino, currentCoords());
-  drawTetromino(12, 14, nextTetromino, TETROMINOS[nextTetromino - 1].coords[0]);
+  drawTetromino(12, 13, nextTetromino, TETROMINOS[nextTetromino - 1].coords[0]);
 }
 
 function drawInfoBoard() {
-  ctx.drawImage(titel, 490, 30, 265, 110);
+  ctx.drawImage(
+    titel,
+    12 * CELL_WIDTH,
+    1 * CELL_WIDTH,
+    6 * CELL_WIDTH,
+    2.5 * CELL_WIDTH,
+  );
 
   drawFillRect(
     BOARD_WIDTH,
