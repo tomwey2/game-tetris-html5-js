@@ -13,6 +13,7 @@ const TEXT_COLOR_LIGHT = "#808080";
 const TEXT_COLOR_TERIS = "#FF00FF";
 
 // game states
+//
 const GAME_INIT = "GAME_INIT";
 const GAME_READY = "GAME_IS_READY";
 const GAME_IS_RUNNING = "GAME_IS_RUNNING";
@@ -21,14 +22,36 @@ const GAME_IS_PAUSED = "GAME_IS_PAUSED";
 
 // dimensions
 canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+const IS_DESKTOP = window.innerWidth > window.innerHeight ? true : false;
+console.info("canvas: " + canvas.width + "x" + canvas.height);
+console.info(IS_DESKTOP ? "DESKTOP" : "PHONE");
+
 const BOARD_ROWS = 22; // the upper two rows are not shown
 const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
-const CELL_WIDTH = canvas.height / (BOARD_VISIBLE_ROWS + 2); // incl top and bottom margin
-canvas.width = CELL_WIDTH * 19;
-const BOARD_WIDTH = CELL_WIDTH * (BOARD_COLS + 2);
-const INFO_BOARD_WIDTH = canvas.width - BOARD_WIDTH - CELL_WIDTH;
-const INFO_BOARD_CENTER = BOARD_WIDTH + INFO_BOARD_WIDTH / 2;
+const BOARD_OFFSET_Y = IS_DESKTOP ? 0 : 1;
+
+const CELL_WIDTH = IS_DESKTOP ? canvas.height / 22 : canvas.height / 26;
+canvas.width = IS_DESKTOP ? 19 * CELL_WIDTH : 12 * CELL_WIDTH;
+
+// prints
+const TEXT_FONT = IS_DESKTOP ? "25px" : "16px";
+const SCORE_TEXT_XY = IS_DESKTOP ? [15, 13] : [2.5, 23.5];
+const SCORE_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
+const SCORE_VALUE_XY = IS_DESKTOP ? [15, 14] : [2.5, 24.5];
+const SCORE_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
+const LEVEL_TEXT_XY = IS_DESKTOP ? [15, 16] : [5, 23.5];
+const LEVEL_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
+const LEVEL_VALUE_XY = IS_DESKTOP ? [15, 17] : [5, 24.5];
+const LEVEL_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
+const LINES_TEXT_XY = [15, 19];
+const LINES_TEXT_ALIGN = "center";
+const LINES_VALUE_XY = [15, 20];
+const LINES_VALUE_ALIGN = "center";
+const TETRIS_IMAGE_XY = IS_DESKTOP ? [12, 1] : [7, 0];
+const TETRIS_IMAGE_WIDTH = IS_DESKTOP ? 6 : 4;
+const TETRIS_IMAGE_HEIGHT = IS_DESKTOP ? 2.5 : 2.5;
 
 // game dynamic
 //         Level:     0     1    2    3    4    5    6   7   8   9  10 and more
@@ -327,9 +350,28 @@ function moveDownTetromino() {
 }
 
 function draw() {
-  //drawFillRect(0, 0, canvas.width, canvas.height, BOARD_BACKGROUND_COLOR_DARK);
+  //drawFillRect(0, 0, canvas.width, canvas.height, "yellow");
+  IS_DESKTOP ? drawInfoBoardDesktop() : drawInfoBoardPhone();
+
+  ctx.drawImage(
+    titel,
+    TETRIS_IMAGE_XY[0] * CELL_WIDTH,
+    TETRIS_IMAGE_XY[1] * CELL_WIDTH,
+    TETRIS_IMAGE_WIDTH * CELL_WIDTH,
+    TETRIS_IMAGE_HEIGHT * CELL_WIDTH,
+  );
+
+  drawScore();
+  drawLevel();
+  //  drawLines();
+  drawGameBoard();
+  drawTetromino(0, 0, currentTetromino, currentCoords());
+  //  drawTetromino(12, 13, nextTetromino, TETROMINOS[nextTetromino - 1].coords[0]);
+}
+
+function drawInfoBoardDesktop() {
   for (let row = -1; row < BOARD_VISIBLE_ROWS + 1; row++) {
-    for (let col = -1; col <= BOARD_COLS + 10; col++) {
+    for (let col = -1; col <= 19; col++) {
       drawCell(
         row,
         col,
@@ -341,30 +383,16 @@ function draw() {
     }
   }
 
-  drawInfoBoard();
-  drawGameBoard();
-  drawTetromino(0, 0, currentTetromino, currentCoords());
-  drawTetromino(12, 13, nextTetromino, TETROMINOS[nextTetromino - 1].coords[0]);
-}
-
-function drawInfoBoard() {
-  ctx.drawImage(
-    titel,
-    12 * CELL_WIDTH,
-    1 * CELL_WIDTH,
-    6 * CELL_WIDTH,
-    2.5 * CELL_WIDTH,
-  );
-
   drawFillRect(
-    BOARD_WIDTH,
+    CELL_WIDTH * 12,
     CELL_WIDTH * 4,
-    INFO_BOARD_WIDTH,
+    CELL_WIDTH * 6,
     CELL_WIDTH * 7,
     BOARD_BACKGROUND_COLOR_LIGHT,
   );
+
   drawText(
-    INFO_BOARD_CENTER,
+    CELL_WIDTH * 15,
     CELL_WIDTH * 5,
     "NEXT",
     BOARD_BACKGROUND_COLOR_DARK,
@@ -372,72 +400,101 @@ function drawInfoBoard() {
     "middle",
   );
   drawFillRect(
-    BOARD_WIDTH,
     CELL_WIDTH * 12,
-    INFO_BOARD_WIDTH,
+    CELL_WIDTH * 12,
+    CELL_WIDTH * 6,
     CELL_WIDTH * 9,
     BOARD_BACKGROUND_COLOR_LIGHT,
   );
+}
+
+function drawInfoBoardPhone() {
+  for (let row = -5; row <= BOARD_VISIBLE_ROWS + 1; row++) {
+    for (let col = -1; col <= 10; col++) {
+      drawCell(
+        row,
+        col,
+        TEXT_COLOR_NORMAL,
+        TEXT_COLOR_LIGHT,
+        TEXT_COLOR_DARK,
+        false,
+      );
+    }
+  }
+
+  drawFillRect(
+    CELL_WIDTH * 1,
+    CELL_WIDTH * 23,
+    CELL_WIDTH * 10,
+    CELL_WIDTH * 2,
+    BOARD_BACKGROUND_COLOR_LIGHT,
+  );
+}
+
+function drawScore() {
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 13,
+    SCORE_TEXT_XY[0] * CELL_WIDTH,
+    SCORE_TEXT_XY[1] * CELL_WIDTH,
     "SCORE",
     TEXT_COLOR_LIGHT,
-    "center",
+    SCORE_TEXT_ALIGN,
     "middle",
+    TEXT_FONT,
   );
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 14,
+    SCORE_VALUE_XY[0] * CELL_WIDTH,
+    SCORE_VALUE_XY[1] * CELL_WIDTH,
     gameScore.toString(),
     BOARD_BACKGROUND_COLOR_DARK,
-    "center",
+    SCORE_VALUE_ALIGN,
     "middle",
+    TEXT_FONT,
   );
+}
 
+function drawLevel() {
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 16,
+    LEVEL_TEXT_XY[0] * CELL_WIDTH,
+    LEVEL_TEXT_XY[1] * CELL_WIDTH,
     "LEVEL",
     TEXT_COLOR_LIGHT,
-    "center",
+    LEVEL_TEXT_ALIGN,
     "middle",
+    TEXT_FONT,
   );
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 17,
+    LEVEL_VALUE_XY[0] * CELL_WIDTH,
+    LEVEL_VALUE_XY[1] * CELL_WIDTH,
     (gameLevel + 1).toString(),
     BOARD_BACKGROUND_COLOR_DARK,
-    "center",
+    LEVEL_VALUE_ALIGN,
     "middle",
+    TEXT_FONT,
   );
+}
 
+function drawLines() {
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 19,
+    LINES_TEXT_XY[0] * CELL_WIDTH,
+    LINES_TEXT_XY[1] * CELL_WIDTH,
     "LINES",
     TEXT_COLOR_LIGHT,
-    "center",
+    LINES_TEXT_ALIGN,
     "middle",
+    TEXT_FONT,
   );
   drawText(
-    INFO_BOARD_CENTER,
-    CELL_WIDTH * 20,
+    LINES_VALUE_XY[0] * CELL_WIDTH,
+    LINES_VALUE_XY[1] * CELL_WIDTH,
     gameLines.toString(),
     BOARD_BACKGROUND_COLOR_DARK,
-    "center",
+    LINES_VALUE_ALIGN,
     "middle",
+    TEXT_FONT,
   );
 }
 
 function drawGameBoard() {
-  drawFillRect(
-    CELL_WIDTH,
-    CELL_WIDTH,
-    CELL_WIDTH * BOARD_COLS,
-    CELL_WIDTH * BOARD_VISIBLE_ROWS,
-    BOARD_BACKGROUND_COLOR_LIGHT,
-  );
   for (let row = 0; row < BOARD_VISIBLE_ROWS; row++) {
     for (let col = 0; col < BOARD_COLS; col++) {
       if (board[row][col] == 0) {
@@ -491,7 +548,7 @@ function drawEmptyCell(row, col) {
 function drawCell(row, col, colorNormal, colorLight, colorDark, check = true) {
   let x = transformColToX(col);
   let y = transformRowToX(row);
-  if (check && y < 0) return;
+  if (check && y < 0 + BOARD_OFFSET_Y) return;
   drawFillRect(
     CELL_WIDTH + x * CELL_WIDTH,
     CELL_WIDTH + y * CELL_WIDTH,
@@ -526,31 +583,32 @@ function drawMessage(message) {
   drawFillRect(
     CELL_WIDTH * 3,
     CELL_WIDTH * 8,
-    CELL_WIDTH * 14,
+    CELL_WIDTH * 13,
     CELL_WIDTH * 5,
     BOARD_BACKGROUND_COLOR_DARK,
   );
   drawText(
-    CELL_WIDTH * 10,
+    CELL_WIDTH * 9.5,
     CELL_WIDTH * 10,
     message,
     BOARD_BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
+    TEXT_FONT,
   );
   drawText(
-    CELL_WIDTH * 10,
+    CELL_WIDTH * 9.5,
     CELL_WIDTH * 11,
     "Press any key to restart",
     BOARD_BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
-    "20px",
+    TEXT_FONT,
   );
 }
 
 function transformRowToX(row) {
-  return BOARD_VISIBLE_ROWS - row - 1;
+  return BOARD_VISIBLE_ROWS - row - 1 + BOARD_OFFSET_Y;
 }
 
 function transformColToX(col) {
