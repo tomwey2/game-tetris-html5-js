@@ -1,7 +1,7 @@
 "use strict";
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const titel = document.getElementById("titel");
+const title = document.getElementById("title");
 const fps = 60;
 
 // colors
@@ -13,7 +13,6 @@ const TEXT_COLOR_LIGHT = "#808080";
 const TEXT_COLOR_TERIS = "#FF00FF";
 
 // game states
-//
 const GAME_INIT = "GAME_INIT";
 const GAME_READY = "GAME_IS_READY";
 const GAME_IS_RUNNING = "GAME_IS_RUNNING";
@@ -36,22 +35,29 @@ const CELL_WIDTH = IS_DESKTOP ? canvas.height / 22 : canvas.height / 26;
 canvas.width = IS_DESKTOP ? 19 * CELL_WIDTH : 12 * CELL_WIDTH;
 
 // prints
-const TEXT_FONT = IS_DESKTOP ? "25px" : "16px";
+const TEXT_FONT_NORMAL = IS_DESKTOP ? "25px" : "16px";
+const TEXT_FONT_SMALL = IS_DESKTOP ? "16px" : "12px";
 const SCORE_TEXT_XY = IS_DESKTOP ? [15, 13] : [2.5, 23.5];
 const SCORE_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
 const SCORE_VALUE_XY = IS_DESKTOP ? [15, 14] : [2.5, 24.5];
 const SCORE_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
-const LEVEL_TEXT_XY = IS_DESKTOP ? [15, 16] : [5, 23.5];
+const LEVEL_TEXT_XY = IS_DESKTOP ? [15, 16] : [5.5, 23.5];
 const LEVEL_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
-const LEVEL_VALUE_XY = IS_DESKTOP ? [15, 17] : [5, 24.5];
+const LEVEL_VALUE_XY = IS_DESKTOP ? [15, 17] : [5.5, 24.5];
 const LEVEL_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
 const LINES_TEXT_XY = [15, 19];
 const LINES_TEXT_ALIGN = "center";
 const LINES_VALUE_XY = [15, 20];
 const LINES_VALUE_ALIGN = "center";
-const TETRIS_IMAGE_XY = IS_DESKTOP ? [12, 1] : [7, 0];
+const TETRIS_IMAGE_XY = IS_DESKTOP ? [12, 1] : [4, 0.7];
 const TETRIS_IMAGE_WIDTH = IS_DESKTOP ? 6 : 4;
-const TETRIS_IMAGE_HEIGHT = IS_DESKTOP ? 2.5 : 2.5;
+const TETRIS_IMAGE_HEIGHT = IS_DESKTOP ? 2.5 : 2.0;
+const TOM_TEXT_XY = IS_DESKTOP ? [15, 0.5] : [6, 0.4];
+const NEXT_TETROMINO_ROW_COL = IS_DESKTOP ? [12, 13] : [-3, 7];
+const MESSAGE_BOX_XY = IS_DESKTOP ? [3, 8] : [1, 8];
+const MESSAGE_BOX_WIDTH = IS_DESKTOP ? 13 : 10;
+const MESSAGE_BOX_HEIGHT = 5;
+const MESSAGE_TEXT_XY = IS_DESKTOP ? [9.5, 10] : [6.5, 10];
 
 // game dynamic
 //         Level:     0     1    2    3    4    5    6   7   8   9  10 and more
@@ -75,6 +81,7 @@ let nextTetrominos = [];
 let nextTetromino = 0;
 let touchMoveX = 0;
 let touchMoveY = 0;
+let touchPoint = 0;
 
 function gameloop() {
   console.log("state=" + gameState);
@@ -85,19 +92,17 @@ function gameloop() {
       break;
     case GAME_READY: // print "ready" and wait for keypressed
       draw();
-      drawMessage("Get Ready!");
+      drawIsReadyMessage("Get Ready!");
       break;
     case GAME_IS_RUNNING: // run the game until it is over
       draw();
       break;
     case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to INIT
       draw();
-      drawMessage("Game Over!");
+      drawGameOverMessage("Game Over!");
       break;
   }
 }
-
-function userinput(keypressed) {}
 
 window.addEventListener("keydown", (event) => {
   let code = event.keyCode;
@@ -163,15 +168,20 @@ canvas.addEventListener("touchend", (event) => {
   if (touches.length > 0) {
     const dx = touches[0].screenX - touchMoveX;
     const dy = touches[0].screenY - touchMoveY;
+    if (dx < 5 && dy < 5) {
+      touchPoint++;
+    }
     const touchLeft = Math.abs(dx) > Math.abs(dy) && dx < 0;
     const touchRight = Math.abs(dx) > Math.abs(dy) && dx > 0;
     const touchUp = Math.abs(dx) < Math.abs(dy) && dy < 0;
     const touchDown = Math.abs(dx) < Math.abs(dy) && dy > 0;
+    const doubleTouch = touchPoint >= 2;
 
     switch (gameState) {
       case GAME_READY:
-        if (touchLeft || touchRight) {
+        if (doubleTouch) {
           gameState = GAME_IS_RUNNING;
+          touchPoint = 0;
         }
         break;
       case GAME_IS_RUNNING:
@@ -186,8 +196,9 @@ canvas.addEventListener("touchend", (event) => {
         }
         break;
       case GAME_IS_OVER:
-        if (touchLeft || touchRight) {
+        if (doubleTouch) {
           gameState = GAME_INIT;
+          touchPoint = 0;
         }
         break;
     }
@@ -353,20 +364,38 @@ function draw() {
   //drawFillRect(0, 0, canvas.width, canvas.height, "yellow");
   IS_DESKTOP ? drawInfoBoardDesktop() : drawInfoBoardPhone();
 
+  drawScore();
+  drawLevel();
+  if (IS_DESKTOP) drawLines();
+  drawGameBoard();
+  drawTetromino(0, 0, currentTetromino, currentCoords());
+  drawTetromino(
+    NEXT_TETROMINO_ROW_COL[0],
+    NEXT_TETROMINO_ROW_COL[1],
+    nextTetromino,
+    TETROMINOS[nextTetromino - 1].coords[0],
+  );
+
+  drawTitle();
+}
+
+function drawTitle() {
   ctx.drawImage(
-    titel,
+    title,
     TETRIS_IMAGE_XY[0] * CELL_WIDTH,
     TETRIS_IMAGE_XY[1] * CELL_WIDTH,
     TETRIS_IMAGE_WIDTH * CELL_WIDTH,
     TETRIS_IMAGE_HEIGHT * CELL_WIDTH,
   );
-
-  drawScore();
-  drawLevel();
-  //  drawLines();
-  drawGameBoard();
-  drawTetromino(0, 0, currentTetromino, currentCoords());
-  //  drawTetromino(12, 13, nextTetromino, TETROMINOS[nextTetromino - 1].coords[0]);
+  drawText(
+    TOM_TEXT_XY[0] * CELL_WIDTH,
+    TOM_TEXT_XY[1] * CELL_WIDTH,
+    "Tom's",
+    "yellow",
+    "center",
+    "middle",
+    TEXT_FONT_NORMAL,
+  );
 }
 
 function drawInfoBoardDesktop() {
@@ -439,7 +468,7 @@ function drawScore() {
     TEXT_COLOR_LIGHT,
     SCORE_TEXT_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
   drawText(
     SCORE_VALUE_XY[0] * CELL_WIDTH,
@@ -448,7 +477,7 @@ function drawScore() {
     BOARD_BACKGROUND_COLOR_DARK,
     SCORE_VALUE_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
 }
 
@@ -460,7 +489,7 @@ function drawLevel() {
     TEXT_COLOR_LIGHT,
     LEVEL_TEXT_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
   drawText(
     LEVEL_VALUE_XY[0] * CELL_WIDTH,
@@ -469,7 +498,7 @@ function drawLevel() {
     BOARD_BACKGROUND_COLOR_DARK,
     LEVEL_VALUE_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
 }
 
@@ -481,7 +510,7 @@ function drawLines() {
     TEXT_COLOR_LIGHT,
     LINES_TEXT_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
   drawText(
     LINES_VALUE_XY[0] * CELL_WIDTH,
@@ -490,7 +519,7 @@ function drawLines() {
     BOARD_BACKGROUND_COLOR_DARK,
     LINES_VALUE_ALIGN,
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
 }
 
@@ -579,31 +608,80 @@ function drawCell(row, col, colorNormal, colorLight, colorDark, check = true) {
   );
 }
 
-function drawMessage(message) {
+function drawIsReadyMessage() {
   drawFillRect(
-    CELL_WIDTH * 3,
-    CELL_WIDTH * 8,
-    CELL_WIDTH * 13,
-    CELL_WIDTH * 5,
+    CELL_WIDTH * MESSAGE_BOX_XY[0],
+    CELL_WIDTH * MESSAGE_BOX_XY[1],
+    CELL_WIDTH * MESSAGE_BOX_WIDTH,
+    CELL_WIDTH * (MESSAGE_BOX_HEIGHT + 1),
     BOARD_BACKGROUND_COLOR_DARK,
   );
   drawText(
-    CELL_WIDTH * 9.5,
-    CELL_WIDTH * 10,
-    message,
+    CELL_WIDTH * MESSAGE_TEXT_XY[0],
+    CELL_WIDTH * (MESSAGE_TEXT_XY[1] - 1),
+    "Get Ready!",
     BOARD_BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
   );
   drawText(
-    CELL_WIDTH * 9.5,
-    CELL_WIDTH * 11,
-    "Press any key to restart",
+    CELL_WIDTH * MESSAGE_TEXT_XY[0],
+    CELL_WIDTH * MESSAGE_TEXT_XY[1],
+    IS_DESKTOP ? "press any key!" : "double touch the screen!  ",
     BOARD_BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
-    TEXT_FONT,
+    TEXT_FONT_NORMAL,
+  );
+  let textlines = [
+    IS_DESKTOP
+      ? "Move tiles with cursor keys  "
+      : "Move tiles with swipe gestures  ",
+    "left, right: move horizontal  ",
+    "up: turn tile  ",
+    "down: drop down tile  ",
+  ];
+  let offset = 1.5;
+  for (let index = 0; index < textlines.length; index++) {
+    drawText(
+      CELL_WIDTH * MESSAGE_TEXT_XY[0],
+      CELL_WIDTH * (MESSAGE_TEXT_XY[1] + offset),
+      textlines[index],
+      BOARD_BACKGROUND_COLOR_LIGHT,
+      "center",
+      "middle",
+      TEXT_FONT_SMALL,
+    );
+    offset += 0.6;
+  }
+}
+
+function drawGameOverMessage() {
+  drawFillRect(
+    CELL_WIDTH * MESSAGE_BOX_XY[0],
+    CELL_WIDTH * MESSAGE_BOX_XY[1],
+    CELL_WIDTH * MESSAGE_BOX_WIDTH,
+    CELL_WIDTH * MESSAGE_BOX_HEIGHT,
+    BOARD_BACKGROUND_COLOR_DARK,
+  );
+  drawText(
+    CELL_WIDTH * MESSAGE_TEXT_XY[0],
+    CELL_WIDTH * MESSAGE_TEXT_XY[1],
+    "Game Over!",
+    BOARD_BACKGROUND_COLOR_LIGHT,
+    "center",
+    "middle",
+    TEXT_FONT_NORMAL,
+  );
+  drawText(
+    CELL_WIDTH * MESSAGE_TEXT_XY[0],
+    CELL_WIDTH * (MESSAGE_TEXT_XY[1] + 1),
+    IS_DESKTOP ? "press any key!" : "double touch the screen! ",
+    BOARD_BACKGROUND_COLOR_LIGHT,
+    "center",
+    "middle",
+    TEXT_FONT_NORMAL,
   );
 }
 
