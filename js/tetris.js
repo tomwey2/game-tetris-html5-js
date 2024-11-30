@@ -59,9 +59,14 @@ const MESSAGE_BOX_HEIGHT = 5;
 const MESSAGE_TEXT_XY = IS_DESKTOP ? [9.5, 10] : [6.5, 10];
 
 // game dynamic
-//         Level:     0     1    2    3    4    5    6   7   8   9  10 and more
-const LEVEL_SPEED = [1000, 800, 600, 400, 200, 100, 90, 80, 70, 60, 50];
-const SPEED_DROPDOWN = 50;
+function softDropSpeed(level) {
+  // determine the spent per row in milli seconds depending of the level
+  // function from harddrop.com/wiki/Tetris_Worlds
+  return Math.pow(0.8 - (level - 1) * 0.007, level - 1) * 1000;
+}
+function hardDropSpeed() {
+  return 50; // milli seconds
+}
 
 // game variables
 let gameInterval = setInterval(gameloop, 1000 / fps);
@@ -226,7 +231,7 @@ function getNextTetromino() {
 function gameInit() {
   board.forEach((row) => row.fill(0));
   gameLevel = 0;
-  setSpeed(LEVEL_SPEED[gameLevel]);
+  setSpeed(softDropSpeed(gameLevel));
   gameState = GAME_READY;
   nextTetrominos = shuffle(ALL_TETROMINOS.slice());
   getNextTetromino();
@@ -249,7 +254,7 @@ function update() {
     if (gameLevel > 10) {
       gameLevel = 10;
     }
-    setSpeed(LEVEL_SPEED[gameLevel]);
+    setSpeed(softDropSpeed(gameLevel));
   }
 }
 
@@ -304,7 +309,7 @@ function scoreOfClearLines(lines) {
 }
 
 function hardDropTetromino() {
-  setSpeed(SPEED_DROPDOWN);
+  setSpeed(hardDropSpeed());
 }
 
 function currentCoords() {
