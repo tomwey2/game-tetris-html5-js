@@ -5,12 +5,11 @@ const title = document.getElementById("title");
 const fps = 60;
 
 // colors
-const BOARD_BACKGROUND_COLOR_DARK = "#333300";
-const BOARD_BACKGROUND_COLOR_LIGHT = "#E5E5CC";
+const BACKGROUND_COLOR_DARK = "#333300";
+const BACKGROUND_COLOR_LIGHT = "#E5E5CC";
 const TEXT_COLOR_NORMAL = "#4C4C4C";
 const TEXT_COLOR_DARK = "#202020";
 const TEXT_COLOR_LIGHT = "#808080";
-const TEXT_COLOR_TERIS = "#FF00FF";
 
 // game states
 const GAME_INIT = "GAME_INIT";
@@ -417,14 +416,14 @@ function drawInfoBoardDesktop() {
     CELL_WIDTH * 4,
     CELL_WIDTH * 6,
     CELL_WIDTH * 7,
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
   );
 
   drawText(
     CELL_WIDTH * 15,
     CELL_WIDTH * 5,
     "NEXT",
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
     "center",
     "middle",
   );
@@ -433,7 +432,7 @@ function drawInfoBoardDesktop() {
     CELL_WIDTH * 12,
     CELL_WIDTH * 6,
     CELL_WIDTH * 9,
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
   );
 }
 
@@ -456,7 +455,7 @@ function drawInfoBoardPhone() {
     CELL_WIDTH * 23,
     CELL_WIDTH * 10,
     CELL_WIDTH * 2,
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
   );
 }
 
@@ -474,7 +473,7 @@ function drawScore() {
     SCORE_VALUE_XY[0] * CELL_WIDTH,
     SCORE_VALUE_XY[1] * CELL_WIDTH,
     gameScore.toString(),
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
     SCORE_VALUE_ALIGN,
     "middle",
     TEXT_FONT_NORMAL,
@@ -495,7 +494,7 @@ function drawLevel() {
     LEVEL_VALUE_XY[0] * CELL_WIDTH,
     LEVEL_VALUE_XY[1] * CELL_WIDTH,
     (gameLevel + 1).toString(),
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
     LEVEL_VALUE_ALIGN,
     "middle",
     TEXT_FONT_NORMAL,
@@ -516,7 +515,7 @@ function drawLines() {
     LINES_VALUE_XY[0] * CELL_WIDTH,
     LINES_VALUE_XY[1] * CELL_WIDTH,
     gameLines.toString(),
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
     LINES_VALUE_ALIGN,
     "middle",
     TEXT_FONT_NORMAL,
@@ -570,7 +569,7 @@ function drawEmptyCell(row, col) {
     CELL_WIDTH + y * CELL_WIDTH + 1,
     CELL_WIDTH - 2,
     CELL_WIDTH - 2,
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
   );
 }
 
@@ -614,13 +613,13 @@ function drawIsReadyMessage() {
     CELL_WIDTH * MESSAGE_BOX_XY[1],
     CELL_WIDTH * MESSAGE_BOX_WIDTH,
     CELL_WIDTH * (MESSAGE_BOX_HEIGHT + 1),
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
   );
   drawText(
     CELL_WIDTH * MESSAGE_TEXT_XY[0],
     CELL_WIDTH * (MESSAGE_TEXT_XY[1] - 1),
     "Get Ready!",
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
     TEXT_FONT_NORMAL,
@@ -629,7 +628,7 @@ function drawIsReadyMessage() {
     CELL_WIDTH * MESSAGE_TEXT_XY[0],
     CELL_WIDTH * MESSAGE_TEXT_XY[1],
     IS_DESKTOP ? "press any key!" : "double touch the screen!  ",
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
     TEXT_FONT_NORMAL,
@@ -648,7 +647,7 @@ function drawIsReadyMessage() {
       CELL_WIDTH * MESSAGE_TEXT_XY[0],
       CELL_WIDTH * (MESSAGE_TEXT_XY[1] + offset),
       textlines[index],
-      BOARD_BACKGROUND_COLOR_LIGHT,
+      BACKGROUND_COLOR_LIGHT,
       "center",
       "middle",
       TEXT_FONT_SMALL,
@@ -663,13 +662,13 @@ function drawGameOverMessage() {
     CELL_WIDTH * MESSAGE_BOX_XY[1],
     CELL_WIDTH * MESSAGE_BOX_WIDTH,
     CELL_WIDTH * MESSAGE_BOX_HEIGHT,
-    BOARD_BACKGROUND_COLOR_DARK,
+    BACKGROUND_COLOR_DARK,
   );
   drawText(
     CELL_WIDTH * MESSAGE_TEXT_XY[0],
     CELL_WIDTH * MESSAGE_TEXT_XY[1],
     "Game Over!",
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
     TEXT_FONT_NORMAL,
@@ -678,7 +677,7 @@ function drawGameOverMessage() {
     CELL_WIDTH * MESSAGE_TEXT_XY[0],
     CELL_WIDTH * (MESSAGE_TEXT_XY[1] + 1),
     IS_DESKTOP ? "press any key!" : "double touch the screen! ",
-    BOARD_BACKGROUND_COLOR_LIGHT,
+    BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
     TEXT_FONT_NORMAL,
