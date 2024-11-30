@@ -239,7 +239,6 @@ function gameInit() {
 
 function update() {
   if (gameState != GAME_IS_RUNNING) return;
-  moveDownTetromino();
   if (isBottom()) {
     if (isGameOver()) {
       gameState = GAME_IS_OVER;
@@ -256,6 +255,7 @@ function update() {
     }
     setSpeed(softDropSpeed(gameLevel));
   }
+  moveDownTetromino();
 }
 
 function setTetrominoIntoBoard() {
