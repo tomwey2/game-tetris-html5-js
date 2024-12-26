@@ -632,7 +632,7 @@ function drawIsReadyMessage() {
   drawText(
     CELL_WIDTH * MESSAGE_TEXT_XY[0],
     CELL_WIDTH * MESSAGE_TEXT_XY[1],
-    IS_DESKTOP ? "press any key!" : "double touch the screen!  ",
+    IS_DESKTOP ? "press any key!" : "touch the screen!",
     BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
@@ -641,7 +641,7 @@ function drawIsReadyMessage() {
   let textlines = [
     IS_DESKTOP
       ? "Move tiles with cursor keys  "
-      : "Move tiles with swipe gestures  ",
+      : "Move tiles by swiping screen  ",
     "left, right: move horizontal  ",
     "up: turn tile  ",
     "down: drop down tile  ",
