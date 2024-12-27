@@ -371,20 +371,14 @@ function moveDownTetromino() {
 
 function draw() {
   //drawFillRect(0, 0, canvas.width, canvas.height, "yellow");
-  IS_DESKTOP ? drawInfoBoardDesktop() : drawInfoBoardPhone();
+  IS_DESKTOP ? drawFrameDesktop() : drawFramePhone();
 
+  drawNext();
   drawScore();
   drawLevel();
   if (IS_DESKTOP) drawLines();
-  drawGameBoard();
-  drawTetromino(0, 0, currentTetromino, currentCoords());
-  drawTetromino(
-    NEXT_TETROMINO_ROW_COL[0],
-    NEXT_TETROMINO_ROW_COL[1],
-    nextTetromino,
-    TETROMINOS[nextTetromino - 1].coords[0],
-  );
-
+  drawBoard();
+  drawCurrentTetromino();
   drawTitle();
 }
 
@@ -407,7 +401,7 @@ function drawTitle() {
   );
 }
 
-function drawInfoBoardDesktop() {
+function drawFrameDesktop() {
   for (let row = -1; row < BOARD_VISIBLE_ROWS + 1; row++) {
     for (let col = -1; col <= 19; col++) {
       drawCell(
@@ -429,14 +423,6 @@ function drawInfoBoardDesktop() {
     BACKGROUND_COLOR_LIGHT,
   );
 
-  drawText(
-    CELL_WIDTH * 15,
-    CELL_WIDTH * 5,
-    "NEXT",
-    BACKGROUND_COLOR_DARK,
-    "center",
-    "middle",
-  );
   drawFillRect(
     CELL_WIDTH * 12,
     CELL_WIDTH * 12,
@@ -446,7 +432,7 @@ function drawInfoBoardDesktop() {
   );
 }
 
-function drawInfoBoardPhone() {
+function drawFramePhone() {
   for (let row = -5; row <= BOARD_VISIBLE_ROWS + 1; row++) {
     for (let col = -1; col <= 10; col++) {
       drawCell(
@@ -467,6 +453,20 @@ function drawInfoBoardPhone() {
     CELL_WIDTH * 2,
     BACKGROUND_COLOR_LIGHT,
   );
+}
+
+function drawNext() {
+  if (IS_DESKTOP) {
+    drawText(
+      CELL_WIDTH * 15,
+      CELL_WIDTH * 5,
+      "NEXT",
+      BACKGROUND_COLOR_DARK,
+      "center",
+      "middle",
+    );
+  }
+  drawNextTetromino();
 }
 
 function drawScore() {
@@ -532,7 +532,7 @@ function drawLines() {
   );
 }
 
-function drawGameBoard() {
+function drawBoard() {
   for (let row = 0; row < BOARD_VISIBLE_ROWS; row++) {
     for (let col = 0; col < BOARD_COLS; col++) {
       if (board[row][col] == 0) {
@@ -551,7 +551,20 @@ function drawGameBoard() {
   }
 }
 
-function drawTetromino(offsetRow, offsetCol, tetramino, coords) {
+function drawCurrentTetromino() {
+  drawTetromino(currentTetromino, currentCoords(), 0, 0);
+}
+
+function drawNextTetromino() {
+  drawTetromino(
+    nextTetromino,
+    TETROMINOS[nextTetromino - 1].coords[0],
+    NEXT_TETROMINO_ROW_COL[0],
+    NEXT_TETROMINO_ROW_COL[1],
+  );
+}
+
+function drawTetromino(tetramino, coords, offsetRow, offsetCol) {
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
     drawCell(
