@@ -1,4 +1,7 @@
 "use strict";
+
+// * * * * * * * * * * * * *  C O N S T A N T S  * * * * * * * * * * * * *
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const title = document.getElementById("title");
@@ -37,13 +40,13 @@ canvas.width = IS_DESKTOP ? 19 * CELL_WIDTH : 12 * CELL_WIDTH;
 const TEXT_FONT_NORMAL = IS_DESKTOP ? "25px" : "16px";
 const TEXT_FONT_SMALL = IS_DESKTOP ? "16px" : "12px";
 const SCORE_TEXT_XY = IS_DESKTOP ? [15, 13] : [2.5, 23.5];
-const SCORE_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
+const SCORE_TEXT_ALIGN = "center";
 const SCORE_VALUE_XY = IS_DESKTOP ? [15, 14] : [2.5, 24.5];
-const SCORE_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
+const SCORE_VALUE_ALIGN = "center";
 const LEVEL_TEXT_XY = IS_DESKTOP ? [15, 16] : [5.5, 23.5];
-const LEVEL_TEXT_ALIGN = IS_DESKTOP ? "center" : "center";
+const LEVEL_TEXT_ALIGN = "center";
 const LEVEL_VALUE_XY = IS_DESKTOP ? [15, 17] : [5.5, 24.5];
-const LEVEL_VALUE_ALIGN = IS_DESKTOP ? "center" : "center";
+const LEVEL_VALUE_ALIGN = "center";
 const LINES_TEXT_XY = [15, 19];
 const LINES_TEXT_ALIGN = "center";
 const LINES_VALUE_XY = [15, 20];
@@ -58,17 +61,8 @@ const MESSAGE_BOX_WIDTH = IS_DESKTOP ? 13 : 10;
 const MESSAGE_BOX_HEIGHT = 5;
 const MESSAGE_TEXT_XY = IS_DESKTOP ? [9.5, 10] : [6.5, 10];
 
-// game dynamic
-function softDropSpeed(level) {
-  // determine the spent per row in milli seconds depending of the level
-  // function from harddrop.com/wiki/Tetris_Worlds
-  return Math.pow(0.8 - (level - 1) * 0.007, level - 1) * 1000;
-}
-function hardDropSpeed() {
-  return 50; // milli seconds
-}
+// * * * * * * * * * * * * *  G A M E  * * * * * * * * * * * * *
 
-// game variables
 let gameInterval = setInterval(gameloop, 1000 / fps);
 let board = Array(BOARD_ROWS)
   .fill()
@@ -89,7 +83,6 @@ let touchPoint = 0;
 
 function gameloop() {
   console.log("state=" + gameState);
-
   switch (gameState) {
     case GAME_INIT: // initialize the game and go to state READY
       gameInit();
@@ -209,23 +202,20 @@ canvas.addEventListener("touchend", (event) => {
   }
 });
 
+function softDropSpeed(level) {
+  // determine the spent per row in milli seconds depending of the level
+  // function from harddrop.com/wiki/Tetris_Worlds
+  return Math.pow(0.8 - (level - 1) * 0.007, level - 1) * 1000;
+}
+function hardDropSpeed() {
+  return 50; // milli seconds
+}
+
 function setSpeed(speed) {
   if (updateInterval != 0) {
     clearInterval(updateInterval);
   }
   updateInterval = setInterval(() => update(), speed);
-}
-
-function getNextTetromino() {
-  currentTetromino = nextTetrominos.pop();
-  if (nextTetrominos.length == 0) {
-    nextTetrominos = shuffle(ALL_TETROMINOS.slice());
-  }
-  nextTetromino = nextTetrominos.at(nextTetrominos.length - 1);
-  let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
-  let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
-  currentOffset = [yOffset, xOffset];
-  rotationIndex = 0;
 }
 
 function gameInit() {
@@ -237,13 +227,15 @@ function gameInit() {
   getNextTetromino();
 }
 
+// * * * * * * * * * * * * *  U P D A T E   G A M E  * * * * * * * * * * * * *
+
 function update() {
   if (gameState != GAME_IS_RUNNING) return;
   if (isBottom()) {
     if (isGameOver()) {
       gameState = GAME_IS_OVER;
     } else {
-      setTetrominoIntoBoard();
+      updateBoard();
       let lines = clearLines();
       gameLines += lines;
       gameScore += scoreOfClearLines(lines);
@@ -258,19 +250,11 @@ function update() {
   moveDownTetromino();
 }
 
-function setTetrominoIntoBoard() {
+function updateBoard() {
   let coords = TETROMINOS[currentTetromino - 1].coords[rotationIndex];
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
     board[row + currentOffset[0]][col + currentOffset[1]] = currentTetromino;
-  }
-}
-
-function rotateClockwise() {
-  let oldIndex = rotationIndex;
-  rotationIndex = rotationIndex < 3 ? rotationIndex + 1 : 0;
-  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
-    rotationIndex = oldIndex;
   }
 }
 
@@ -308,8 +292,16 @@ function scoreOfClearLines(lines) {
   }
 }
 
-function hardDropTetromino() {
-  setSpeed(hardDropSpeed());
+function getNextTetromino() {
+  currentTetromino = nextTetrominos.pop();
+  if (nextTetrominos.length == 0) {
+    nextTetrominos = shuffle(ALL_TETROMINOS.slice());
+  }
+  nextTetromino = nextTetrominos.at(nextTetrominos.length - 1);
+  let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
+  let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
+  currentOffset = [yOffset, xOffset];
+  rotationIndex = 0;
 }
 
 function currentCoords() {
@@ -319,30 +311,41 @@ function currentCoords() {
   ]);
 }
 
-function allCoordsAreInsideOfBoard() {
+function moveIsValid() {
   return currentCoords().every(
     (coord) =>
+      // all coords are inside of board
       coord[0] >= 0 &&
       coord[0] < BOARD_ROWS &&
       coord[1] >= 0 &&
-      coord[1] < BOARD_COLS,
+      coord[1] < BOARD_COLS &&
+      // all cells of board are free
+      board[coord[0]][coord[1]] == 0,
   );
 }
 
-function allCellsOfBoardAreFree() {
-  return currentCoords().every((coord) => board[coord[0]][coord[1]] == 0);
+function hardDropTetromino() {
+  setSpeed(hardDropSpeed());
+}
+
+function rotateClockwise() {
+  let oldIndex = rotationIndex;
+  rotationIndex = rotationIndex < 3 ? rotationIndex + 1 : 0;
+  if (!moveIsValid()) {
+    rotationIndex = oldIndex;
+  }
 }
 
 function moveLeftTetromino() {
   currentOffset[1]--;
-  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
+  if (!moveIsValid()) {
     currentOffset[1]++;
   }
 }
 
 function moveRightTetromino() {
   currentOffset[1]++;
-  if (!allCoordsAreInsideOfBoard() || !allCellsOfBoardAreFree()) {
+  if (!moveIsValid()) {
     currentOffset[1]--;
   }
 }
@@ -363,6 +366,8 @@ function moveDownTetromino() {
     currentOffset[0]--;
   }
 }
+
+// * * * * * * * * * * * * *  D R A W  G A M E  * * * * * * * * * * * * *
 
 function draw() {
   //drawFillRect(0, 0, canvas.width, canvas.height, "yellow");

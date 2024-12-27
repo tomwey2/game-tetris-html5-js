@@ -1,7 +1,6 @@
 body {
     background: black;
     margin: 0px;
-    font-family: "Press Start 2P", system-ui;
 }
 
 canvas {
@@ -10,9 +9,6 @@ canvas {
     margin-left: auto;
     margin-right: auto;
     display: block;
-    font-family: "PressStart2P", system-ui;
-    font-weight: 400;
-    background: black;
 }
 
 @font-face {
