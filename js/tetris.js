@@ -31,35 +31,60 @@ console.info(IS_DESKTOP ? "DESKTOP" : "PHONE");
 const BOARD_ROWS = 22; // the upper two rows are not shown
 const BOARD_VISIBLE_ROWS = 20;
 const BOARD_COLS = 10;
-const BOARD_OFFSET_Y = IS_DESKTOP ? 0 : 1;
 
 const CELL_WIDTH = IS_DESKTOP ? canvas.height / 22 : canvas.height / 26;
 canvas.width = IS_DESKTOP ? 19 * CELL_WIDTH : 12 * CELL_WIDTH;
 
 // prints
+const BOARD_ZERO = IS_DESKTOP ? { x: 1, y: 20 } : { x: 1, y: 21 };
+const FRAME_SIZE = IS_DESKTOP
+  ? { width: 19, height: 22 }
+  : { width: 12, height: 26 };
+const FRAME_GAME = IS_DESKTOP
+  ? {
+      x: 1,
+      y: 1,
+      width: BOARD_COLS,
+      height: BOARD_VISIBLE_ROWS,
+    }
+  : {
+      x: 1,
+      y: 2,
+      width: BOARD_COLS,
+      height: BOARD_VISIBLE_ROWS,
+    };
+const FRAME_NEXT = IS_DESKTOP
+  ? { x: 12, y: 4, width: 6, heigth: 7 }
+  : { x: 7, y: 23, width: 4, heigth: 2 };
+const FRAME_INFO = IS_DESKTOP
+  ? { x: 12, y: 12, width: 6, height: 9 }
+  : { x: 1, y: 23, width: 6, height: 2 };
+
 const TEXT_FONT_NORMAL = IS_DESKTOP ? "25px" : "16px";
 const TEXT_FONT_SMALL = IS_DESKTOP ? "16px" : "12px";
-const SCORE_TEXT_XY = IS_DESKTOP ? [15, 13] : [2.5, 23.5];
+const SCORE_TEXT_XY = IS_DESKTOP ? { x: 15, y: 13 } : { x: 2.5, y: 23.5 };
 const SCORE_TEXT_ALIGN = "center";
-const SCORE_VALUE_XY = IS_DESKTOP ? [15, 14] : [2.5, 24.5];
+const SCORE_VALUE_XY = IS_DESKTOP ? { x: 15, y: 14 } : { x: 2.5, y: 24.5 };
 const SCORE_VALUE_ALIGN = "center";
-const LEVEL_TEXT_XY = IS_DESKTOP ? [15, 16] : [5.5, 23.5];
+const LEVEL_TEXT_XY = IS_DESKTOP ? { x: 15, y: 16 } : { x: 5.5, y: 23.5 };
 const LEVEL_TEXT_ALIGN = "center";
-const LEVEL_VALUE_XY = IS_DESKTOP ? [15, 17] : [5.5, 24.5];
+const LEVEL_VALUE_XY = IS_DESKTOP ? { x: 15, y: 17 } : { x: 5.5, y: 24.5 };
 const LEVEL_VALUE_ALIGN = "center";
 const LINES_TEXT_XY = [15, 19];
 const LINES_TEXT_ALIGN = "center";
 const LINES_VALUE_XY = [15, 20];
 const LINES_VALUE_ALIGN = "center";
-const TETRIS_IMAGE_XY = IS_DESKTOP ? [12, 1] : [4, 0.7];
-const TETRIS_IMAGE_WIDTH = IS_DESKTOP ? 6 : 4;
-const TETRIS_IMAGE_HEIGHT = IS_DESKTOP ? 2.5 : 2.0;
-const TOM_TEXT_XY = IS_DESKTOP ? [15, 0.5] : [6, 0.4];
-const NEXT_TETROMINO_ROW_COL = IS_DESKTOP ? [12, 13] : [-3, 7];
-const MESSAGE_BOX_XY = IS_DESKTOP ? [3, 8] : [1, 8];
-const MESSAGE_BOX_WIDTH = IS_DESKTOP ? 13 : 10;
-const MESSAGE_BOX_HEIGHT = 5;
-const MESSAGE_TEXT_XY = IS_DESKTOP ? [9.5, 10] : [6.5, 10];
+const TETRIS_IMAGE_XY = IS_DESKTOP
+  ? { x: 12, y: 1, width: 6, height: 2.5 }
+  : { x: 4, y: 0.7, width: 4, height: 2.0 };
+const TOM_TEXT_XY = IS_DESKTOP ? { x: 15, y: 0.5 } : { x: 6, y: 0.4 };
+const NEXT_TETROMINO_ROW_COL = IS_DESKTOP
+  ? { row: 12, col: 13 }
+  : { row: -3, col: 7 };
+const FRAME_MESSAGE_BOX = IS_DESKTOP
+  ? { x: 3, y: 8, width: 13, height: 6 }
+  : { x: 1, y: 8, width: 10, height: 6 };
+const MESSAGE_TEXT_XY = IS_DESKTOP ? { x: 9.5, y: 10 } : { x: 6.5, y: 10 };
 
 // * * * * * * * * * * * * *  G A M E  * * * * * * * * * * * * *
 
@@ -94,7 +119,7 @@ function gameloop() {
     case GAME_IS_RUNNING: // run the game until it is over
       draw();
       break;
-    case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to INIT
+    case GAME_IS_OVER: // print "game is over" and wait for keypressed and go to GAME_INIT
       draw();
       drawGameOverMessage("Game Over!");
       break;
@@ -298,9 +323,9 @@ function getNextTetromino() {
     nextTetrominos = shuffle(ALL_TETROMINOS.slice());
   }
   nextTetromino = nextTetrominos.at(nextTetrominos.length - 1);
-  let yOffset = BOARD_ROWS - 2; // top of the board in invisible rows
-  let xOffset = currentTetromino == TETROMINO_O ? 4 : 3; // center of the board columns
-  currentOffset = [yOffset, xOffset];
+  // set the tetromino at the top of the board in invisible rows
+  // and center of the board columns
+  currentOffset = [BOARD_ROWS - 2, 4];
   rotationIndex = 0;
 }
 
@@ -370,9 +395,7 @@ function moveDownTetromino() {
 // * * * * * * * * * * * * *  D R A W  G A M E  * * * * * * * * * * * * *
 
 function draw() {
-  //drawFillRect(0, 0, canvas.width, canvas.height, "yellow");
-  IS_DESKTOP ? drawFrameDesktop() : drawFramePhone();
-
+  drawFrame();
   drawNext();
   drawScore();
   drawLevel();
@@ -385,14 +408,14 @@ function draw() {
 function drawTitle() {
   ctx.drawImage(
     title,
-    TETRIS_IMAGE_XY[0] * CELL_WIDTH,
-    TETRIS_IMAGE_XY[1] * CELL_WIDTH,
-    TETRIS_IMAGE_WIDTH * CELL_WIDTH,
-    TETRIS_IMAGE_HEIGHT * CELL_WIDTH,
+    TETRIS_IMAGE_XY.x * CELL_WIDTH,
+    TETRIS_IMAGE_XY.y * CELL_WIDTH,
+    TETRIS_IMAGE_XY.width * CELL_WIDTH,
+    TETRIS_IMAGE_XY.height * CELL_WIDTH,
   );
   drawText(
-    TOM_TEXT_XY[0] * CELL_WIDTH,
-    TOM_TEXT_XY[1] * CELL_WIDTH,
+    TOM_TEXT_XY.x * CELL_WIDTH,
+    TOM_TEXT_XY.y * CELL_WIDTH,
     "Tom's",
     "yellow",
     "center",
@@ -401,56 +424,26 @@ function drawTitle() {
   );
 }
 
-function drawFrameDesktop() {
-  for (let row = -1; row < BOARD_VISIBLE_ROWS + 1; row++) {
-    for (let col = -1; col <= 19; col++) {
-      drawCell(
-        row,
-        col,
-        TEXT_COLOR_NORMAL,
-        TEXT_COLOR_LIGHT,
-        TEXT_COLOR_DARK,
-        false,
-      );
+function drawFrame() {
+  for (let y = 0; y < FRAME_SIZE.height; y++) {
+    for (let x = 0; x < FRAME_SIZE.width; x++) {
+      drawCell(x, y, TEXT_COLOR_NORMAL, TEXT_COLOR_LIGHT, TEXT_COLOR_DARK);
     }
   }
 
   drawFillRect(
-    CELL_WIDTH * 12,
-    CELL_WIDTH * 4,
-    CELL_WIDTH * 6,
-    CELL_WIDTH * 7,
+    CELL_WIDTH * FRAME_NEXT.x,
+    CELL_WIDTH * FRAME_NEXT.y,
+    CELL_WIDTH * FRAME_NEXT.width,
+    CELL_WIDTH * FRAME_NEXT.heigth,
     BACKGROUND_COLOR_LIGHT,
   );
 
   drawFillRect(
-    CELL_WIDTH * 12,
-    CELL_WIDTH * 12,
-    CELL_WIDTH * 6,
-    CELL_WIDTH * 9,
-    BACKGROUND_COLOR_LIGHT,
-  );
-}
-
-function drawFramePhone() {
-  for (let row = -5; row <= BOARD_VISIBLE_ROWS + 1; row++) {
-    for (let col = -1; col <= 10; col++) {
-      drawCell(
-        row,
-        col,
-        TEXT_COLOR_NORMAL,
-        TEXT_COLOR_LIGHT,
-        TEXT_COLOR_DARK,
-        false,
-      );
-    }
-  }
-
-  drawFillRect(
-    CELL_WIDTH * 1,
-    CELL_WIDTH * 23,
-    CELL_WIDTH * 10,
-    CELL_WIDTH * 2,
+    CELL_WIDTH * FRAME_INFO.x,
+    CELL_WIDTH * FRAME_INFO.y,
+    CELL_WIDTH * FRAME_INFO.width,
+    CELL_WIDTH * FRAME_INFO.height,
     BACKGROUND_COLOR_LIGHT,
   );
 }
@@ -471,8 +464,8 @@ function drawNext() {
 
 function drawScore() {
   drawText(
-    SCORE_TEXT_XY[0] * CELL_WIDTH,
-    SCORE_TEXT_XY[1] * CELL_WIDTH,
+    SCORE_TEXT_XY.x * CELL_WIDTH,
+    SCORE_TEXT_XY.y * CELL_WIDTH,
     "SCORE",
     TEXT_COLOR_LIGHT,
     SCORE_TEXT_ALIGN,
@@ -480,8 +473,8 @@ function drawScore() {
     TEXT_FONT_NORMAL,
   );
   drawText(
-    SCORE_VALUE_XY[0] * CELL_WIDTH,
-    SCORE_VALUE_XY[1] * CELL_WIDTH,
+    SCORE_VALUE_XY.x * CELL_WIDTH,
+    SCORE_VALUE_XY.y * CELL_WIDTH,
     gameScore.toString(),
     BACKGROUND_COLOR_DARK,
     SCORE_VALUE_ALIGN,
@@ -492,8 +485,8 @@ function drawScore() {
 
 function drawLevel() {
   drawText(
-    LEVEL_TEXT_XY[0] * CELL_WIDTH,
-    LEVEL_TEXT_XY[1] * CELL_WIDTH,
+    LEVEL_TEXT_XY.x * CELL_WIDTH,
+    LEVEL_TEXT_XY.y * CELL_WIDTH,
     "LEVEL",
     TEXT_COLOR_LIGHT,
     LEVEL_TEXT_ALIGN,
@@ -501,8 +494,8 @@ function drawLevel() {
     TEXT_FONT_NORMAL,
   );
   drawText(
-    LEVEL_VALUE_XY[0] * CELL_WIDTH,
-    LEVEL_VALUE_XY[1] * CELL_WIDTH,
+    LEVEL_VALUE_XY.x * CELL_WIDTH,
+    LEVEL_VALUE_XY.y * CELL_WIDTH,
     (gameLevel + 1).toString(),
     BACKGROUND_COLOR_DARK,
     LEVEL_VALUE_ALIGN,
@@ -536,12 +529,12 @@ function drawBoard() {
   for (let row = 0; row < BOARD_VISIBLE_ROWS; row++) {
     for (let col = 0; col < BOARD_COLS; col++) {
       if (board[row][col] == 0) {
-        drawEmptyCell(row, col);
+        drawEmptyCell(colToX(col), rowToY(row));
       } else {
         let tetromino = board[row][col];
         drawCell(
-          row,
-          col,
+          colToX(col),
+          rowToY(row),
           TETROMINOS[tetromino - 1].colorNormal,
           TETROMINOS[tetromino - 1].colorLight,
           TETROMINOS[tetromino - 1].colorDark,
@@ -559,71 +552,62 @@ function drawNextTetromino() {
   drawTetromino(
     nextTetromino,
     TETROMINOS[nextTetromino - 1].coords[0],
-    NEXT_TETROMINO_ROW_COL[0],
-    NEXT_TETROMINO_ROW_COL[1],
+    NEXT_TETROMINO_ROW_COL.row,
+    NEXT_TETROMINO_ROW_COL.col,
   );
 }
 
 function drawTetromino(tetramino, coords, offsetRow, offsetCol) {
   for (let index = 0; index < coords.length; index++) {
     let [row, col] = coords[index];
-    drawCell(
-      row + offsetRow,
-      col + offsetCol,
-      TETROMINOS[tetramino - 1].colorNormal,
-      TETROMINOS[tetramino - 1].colorLight,
-      TETROMINOS[tetramino - 1].colorDark,
-    );
+    if (row < BOARD_VISIBLE_ROWS) {
+      drawCell(
+        colToX(col + offsetCol),
+        rowToY(row + offsetRow),
+        TETROMINOS[tetramino - 1].colorNormal,
+        TETROMINOS[tetramino - 1].colorLight,
+        TETROMINOS[tetramino - 1].colorDark,
+      );
+    }
   }
 }
 
-function drawEmptyCell(row, col) {
-  let x = transformColToX(col);
-  let y = transformRowToX(row);
+function drawEmptyCell(x, y) {
   drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH,
-    CELL_WIDTH + y * CELL_WIDTH,
+    x * CELL_WIDTH,
+    y * CELL_WIDTH,
     CELL_WIDTH,
     CELL_WIDTH,
     "#CCCCCC",
   );
   drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH + 1,
-    CELL_WIDTH + y * CELL_WIDTH + 1,
+    x * CELL_WIDTH + 1,
+    y * CELL_WIDTH + 1,
     CELL_WIDTH - 2,
     CELL_WIDTH - 2,
     BACKGROUND_COLOR_LIGHT,
   );
 }
 
-function drawCell(row, col, colorNormal, colorLight, colorDark, check = true) {
-  let x = transformColToX(col);
-  let y = transformRowToX(row);
-  if (check && y < 0 + BOARD_OFFSET_Y) return;
+function drawCell(x, y, colorNormal, colorLight, colorDark) {
   drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH,
-    CELL_WIDTH + y * CELL_WIDTH,
+    x * CELL_WIDTH,
+    y * CELL_WIDTH,
     CELL_WIDTH - 0,
     CELL_WIDTH - 2,
     colorLight,
   );
   drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH + 4,
-    CELL_WIDTH + y * CELL_WIDTH + 4,
+    x * CELL_WIDTH + 4,
+    y * CELL_WIDTH + 4,
     CELL_WIDTH - 4,
     CELL_WIDTH - 4,
     colorDark,
   );
+  drawFillRect(x * CELL_WIDTH + 0, (y + 1) * CELL_WIDTH - 4, 4, 4, colorLight);
   drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH + 0,
-    CELL_WIDTH + (y + 1) * CELL_WIDTH - 4,
-    4,
-    4,
-    colorLight,
-  );
-  drawFillRect(
-    CELL_WIDTH + x * CELL_WIDTH + 4,
-    CELL_WIDTH + y * CELL_WIDTH + 4,
+    x * CELL_WIDTH + 4,
+    y * CELL_WIDTH + 4,
     CELL_WIDTH - 8,
     CELL_WIDTH - 8,
     colorNormal,
@@ -632,15 +616,15 @@ function drawCell(row, col, colorNormal, colorLight, colorDark, check = true) {
 
 function drawIsReadyMessage() {
   drawFillRect(
-    CELL_WIDTH * MESSAGE_BOX_XY[0],
-    CELL_WIDTH * MESSAGE_BOX_XY[1],
-    CELL_WIDTH * MESSAGE_BOX_WIDTH,
-    CELL_WIDTH * (MESSAGE_BOX_HEIGHT + 1),
+    CELL_WIDTH * FRAME_MESSAGE_BOX.x,
+    CELL_WIDTH * FRAME_MESSAGE_BOX.y,
+    CELL_WIDTH * FRAME_MESSAGE_BOX.width,
+    CELL_WIDTH * FRAME_MESSAGE_BOX.height,
     BACKGROUND_COLOR_DARK,
   );
   drawText(
-    CELL_WIDTH * MESSAGE_TEXT_XY[0],
-    CELL_WIDTH * (MESSAGE_TEXT_XY[1] - 1),
+    CELL_WIDTH * MESSAGE_TEXT_XY.x,
+    CELL_WIDTH * (MESSAGE_TEXT_XY.y - 1),
     "Get Ready!",
     BACKGROUND_COLOR_LIGHT,
     "center",
@@ -648,8 +632,8 @@ function drawIsReadyMessage() {
     TEXT_FONT_NORMAL,
   );
   drawText(
-    CELL_WIDTH * MESSAGE_TEXT_XY[0],
-    CELL_WIDTH * MESSAGE_TEXT_XY[1],
+    CELL_WIDTH * MESSAGE_TEXT_XY.x,
+    CELL_WIDTH * MESSAGE_TEXT_XY.y,
     IS_DESKTOP ? "press any key!" : "touch the screen!",
     BACKGROUND_COLOR_LIGHT,
     "center",
@@ -667,8 +651,8 @@ function drawIsReadyMessage() {
   let offset = 1.5;
   for (let index = 0; index < textlines.length; index++) {
     drawText(
-      CELL_WIDTH * MESSAGE_TEXT_XY[0],
-      CELL_WIDTH * (MESSAGE_TEXT_XY[1] + offset),
+      CELL_WIDTH * MESSAGE_TEXT_XY.x,
+      CELL_WIDTH * (MESSAGE_TEXT_XY.y + offset),
       textlines[index],
       BACKGROUND_COLOR_LIGHT,
       "center",
@@ -707,10 +691,10 @@ function drawGameOverMessage() {
   );
 }
 
-function transformRowToX(row) {
-  return BOARD_VISIBLE_ROWS - row - 1 + BOARD_OFFSET_Y;
+function rowToY(row) {
+  return BOARD_ZERO.y - row;
 }
 
-function transformColToX(col) {
-  return col;
+function colToX(col) {
+  return BOARD_ZERO.x + col;
 }
