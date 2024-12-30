@@ -9,7 +9,7 @@ function drawFillRect(x, y, width, height, color) {
   ctx.fillRect(x, y, width, height);
 }
 
-function drawText(
+function drawFillText(
   px,
   py,
   text,

@@ -54,7 +54,7 @@ const FRAME_GAME = IS_DESKTOP
       height: BOARD_VISIBLE_ROWS,
     };
 const FRAME_NEXT = IS_DESKTOP
-  ? { x: 12, y: 4, width: 6, heigth: 7 }
+  ? { x: 12, y: 5, width: 6, heigth: 6 }
   : { x: 7, y: 23, width: 4, heigth: 2 };
 const FRAME_INFO = IS_DESKTOP
   ? { x: 12, y: 12, width: 6, height: 9 }
@@ -63,23 +63,18 @@ const FRAME_INFO = IS_DESKTOP
 const TEXT_FONT_NORMAL = IS_DESKTOP ? "25px" : "16px";
 const TEXT_FONT_SMALL = IS_DESKTOP ? "16px" : "12px";
 const SCORE_TEXT_XY = IS_DESKTOP ? { x: 15, y: 13 } : { x: 2.5, y: 23.5 };
-const SCORE_TEXT_ALIGN = "center";
 const SCORE_VALUE_XY = IS_DESKTOP ? { x: 15, y: 14 } : { x: 2.5, y: 24.5 };
-const SCORE_VALUE_ALIGN = "center";
 const LEVEL_TEXT_XY = IS_DESKTOP ? { x: 15, y: 16 } : { x: 5.5, y: 23.5 };
-const LEVEL_TEXT_ALIGN = "center";
 const LEVEL_VALUE_XY = IS_DESKTOP ? { x: 15, y: 17 } : { x: 5.5, y: 24.5 };
-const LEVEL_VALUE_ALIGN = "center";
-const LINES_TEXT_XY = [15, 19];
-const LINES_TEXT_ALIGN = "center";
-const LINES_VALUE_XY = [15, 20];
-const LINES_VALUE_ALIGN = "center";
+const LINES_TEXT_XY = { x: 15, y: 19 };
+const LINES_VALUE_XY = { x: 15, y: 20 };
+const NEXT_TEXT_XY = { x: 15, y: 6 };
 const TETRIS_IMAGE_XY = IS_DESKTOP
-  ? { x: 12, y: 1, width: 6, height: 2.5 }
+  ? { x: 12, y: 2, width: 6, height: 2.5 }
   : { x: 4, y: 0.7, width: 4, height: 2.0 };
-const TOM_TEXT_XY = IS_DESKTOP ? { x: 15, y: 0.5 } : { x: 6, y: 0.4 };
+const TOM_TEXT_XY = IS_DESKTOP ? { x: 15, y: 1.5 } : { x: 6, y: 0.4 };
 const NEXT_TETROMINO_ROW_COL = IS_DESKTOP
-  ? { row: 12, col: 13 }
+  ? { row: 11, col: 13 }
   : { row: -3, col: 7 };
 const FRAME_MESSAGE_BOX = IS_DESKTOP
   ? { x: 3, y: 8, width: 13, height: 6 }
@@ -232,6 +227,7 @@ function softDropSpeed(level) {
   // function from harddrop.com/wiki/Tetris_Worlds
   return Math.pow(0.8 - (level - 1) * 0.007, level - 1) * 1000;
 }
+
 function hardDropSpeed() {
   return 50; // milli seconds
 }
@@ -396,10 +392,16 @@ function moveDownTetromino() {
 
 function draw() {
   drawFrame();
-  drawNext();
-  drawScore();
-  drawLevel();
-  if (IS_DESKTOP) drawLines();
+  drawText("NEXT", NEXT_TEXT_XY, TEXT_COLOR_LIGHT);
+  drawNextTetromino();
+  drawText("SCORE", SCORE_TEXT_XY, TEXT_COLOR_LIGHT);
+  drawText(gameScore.toString(), SCORE_VALUE_XY, TEXT_COLOR_DARK);
+  drawText("LEVEL", LEVEL_TEXT_XY, TEXT_COLOR_LIGHT);
+  drawText(gameLevel.toString(), LEVEL_VALUE_XY, TEXT_COLOR_DARK);
+  if (IS_DESKTOP) {
+    drawText("LINES", LINES_TEXT_XY, TEXT_COLOR_LIGHT);
+    drawText(gameLines.toString(), LINES_VALUE_XY, TEXT_COLOR_DARK);
+  }
   drawBoard();
   drawCurrentTetromino();
   drawTitle();
@@ -413,15 +415,7 @@ function drawTitle() {
     TETRIS_IMAGE_XY.width * CELL_WIDTH,
     TETRIS_IMAGE_XY.height * CELL_WIDTH,
   );
-  drawText(
-    TOM_TEXT_XY.x * CELL_WIDTH,
-    TOM_TEXT_XY.y * CELL_WIDTH,
-    "Tom's",
-    "yellow",
-    "center",
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
+  drawText("Tom's", TOM_TEXT_XY, "yellow");
 }
 
 function drawFrame() {
@@ -448,78 +442,13 @@ function drawFrame() {
   );
 }
 
-function drawNext() {
-  if (IS_DESKTOP) {
-    drawText(
-      CELL_WIDTH * 15,
-      CELL_WIDTH * 5,
-      "NEXT",
-      BACKGROUND_COLOR_DARK,
-      "center",
-      "middle",
-    );
-  }
-  drawNextTetromino();
-}
-
-function drawScore() {
-  drawText(
-    SCORE_TEXT_XY.x * CELL_WIDTH,
-    SCORE_TEXT_XY.y * CELL_WIDTH,
-    "SCORE",
-    TEXT_COLOR_LIGHT,
-    SCORE_TEXT_ALIGN,
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-  drawText(
-    SCORE_VALUE_XY.x * CELL_WIDTH,
-    SCORE_VALUE_XY.y * CELL_WIDTH,
-    gameScore.toString(),
-    BACKGROUND_COLOR_DARK,
-    SCORE_VALUE_ALIGN,
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-}
-
-function drawLevel() {
-  drawText(
-    LEVEL_TEXT_XY.x * CELL_WIDTH,
-    LEVEL_TEXT_XY.y * CELL_WIDTH,
-    "LEVEL",
-    TEXT_COLOR_LIGHT,
-    LEVEL_TEXT_ALIGN,
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-  drawText(
-    LEVEL_VALUE_XY.x * CELL_WIDTH,
-    LEVEL_VALUE_XY.y * CELL_WIDTH,
-    (gameLevel + 1).toString(),
-    BACKGROUND_COLOR_DARK,
-    LEVEL_VALUE_ALIGN,
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-}
-
-function drawLines() {
-  drawText(
-    LINES_TEXT_XY[0] * CELL_WIDTH,
-    LINES_TEXT_XY[1] * CELL_WIDTH,
-    "LINES",
-    TEXT_COLOR_LIGHT,
-    LINES_TEXT_ALIGN,
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-  drawText(
-    LINES_VALUE_XY[0] * CELL_WIDTH,
-    LINES_VALUE_XY[1] * CELL_WIDTH,
-    gameLines.toString(),
-    BACKGROUND_COLOR_DARK,
-    LINES_VALUE_ALIGN,
+function drawText(text, textXY, color) {
+  drawFillText(
+    textXY.x * CELL_WIDTH,
+    textXY.y * CELL_WIDTH,
+    text,
+    color,
+    "center",
     "middle",
     TEXT_FONT_NORMAL,
   );
@@ -615,6 +544,24 @@ function drawCell(x, y, colorNormal, colorLight, colorDark) {
 }
 
 function drawIsReadyMessage() {
+  let message = [
+    "Get Ready!",
+    IS_DESKTOP
+      ? "Move tiles with cursor keys  "
+      : "Move tiles by swiping screen  ",
+    "left, right: move horizontal  ",
+    "up: turn tile  ",
+    "down: drop down tile  ",
+  ];
+  drawMessageBox(message);
+}
+
+function drawGameOverMessage() {
+  let message = ["Game Over!"];
+  drawMessageBox(message);
+}
+
+function drawMessageBox(message) {
   drawFillRect(
     CELL_WIDTH * FRAME_MESSAGE_BOX.x,
     CELL_WIDTH * FRAME_MESSAGE_BOX.y,
@@ -622,16 +569,16 @@ function drawIsReadyMessage() {
     CELL_WIDTH * FRAME_MESSAGE_BOX.height,
     BACKGROUND_COLOR_DARK,
   );
-  drawText(
+  drawFillText(
     CELL_WIDTH * MESSAGE_TEXT_XY.x,
     CELL_WIDTH * (MESSAGE_TEXT_XY.y - 1),
-    "Get Ready!",
+    message[0],
     BACKGROUND_COLOR_LIGHT,
     "center",
     "middle",
     TEXT_FONT_NORMAL,
   );
-  drawText(
+  drawFillText(
     CELL_WIDTH * MESSAGE_TEXT_XY.x,
     CELL_WIDTH * MESSAGE_TEXT_XY.y,
     IS_DESKTOP ? "press any key!" : "touch the screen!",
@@ -640,55 +587,21 @@ function drawIsReadyMessage() {
     "middle",
     TEXT_FONT_NORMAL,
   );
-  let textlines = [
-    IS_DESKTOP
-      ? "Move tiles with cursor keys  "
-      : "Move tiles by swiping screen  ",
-    "left, right: move horizontal  ",
-    "up: turn tile  ",
-    "down: drop down tile  ",
-  ];
-  let offset = 1.5;
-  for (let index = 0; index < textlines.length; index++) {
-    drawText(
-      CELL_WIDTH * MESSAGE_TEXT_XY.x,
-      CELL_WIDTH * (MESSAGE_TEXT_XY.y + offset),
-      textlines[index],
-      BACKGROUND_COLOR_LIGHT,
-      "center",
-      "middle",
-      TEXT_FONT_SMALL,
-    );
-    offset += 0.6;
+  if (message.length > 1) {
+    let offset = 1.5;
+    for (let index = 1; index < message.length; index++) {
+      drawFillText(
+        CELL_WIDTH * MESSAGE_TEXT_XY.x,
+        CELL_WIDTH * (MESSAGE_TEXT_XY.y + offset),
+        message[index],
+        BACKGROUND_COLOR_LIGHT,
+        "center",
+        "middle",
+        TEXT_FONT_SMALL,
+      );
+      offset += 0.6;
+    }
   }
-}
-
-function drawGameOverMessage() {
-  drawFillRect(
-    CELL_WIDTH * MESSAGE_BOX_XY[0],
-    CELL_WIDTH * MESSAGE_BOX_XY[1],
-    CELL_WIDTH * MESSAGE_BOX_WIDTH,
-    CELL_WIDTH * MESSAGE_BOX_HEIGHT,
-    BACKGROUND_COLOR_DARK,
-  );
-  drawText(
-    CELL_WIDTH * MESSAGE_TEXT_XY[0],
-    CELL_WIDTH * MESSAGE_TEXT_XY[1],
-    "Game Over!",
-    BACKGROUND_COLOR_LIGHT,
-    "center",
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
-  drawText(
-    CELL_WIDTH * MESSAGE_TEXT_XY[0],
-    CELL_WIDTH * (MESSAGE_TEXT_XY[1] + 1),
-    IS_DESKTOP ? "press any key!" : "double touch the screen! ",
-    BACKGROUND_COLOR_LIGHT,
-    "center",
-    "middle",
-    TEXT_FONT_NORMAL,
-  );
 }
 
 function rowToY(row) {
