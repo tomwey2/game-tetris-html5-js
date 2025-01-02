@@ -1,9 +1,5 @@
 "use strict";
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
-
 function drawFillRect(x, y, width, height, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, width, height);
